@@ -1,0 +1,20 @@
+{
+  "name": "Knip",
+  "short_name": "Knip",
+  "description": "Ett enkelt träningsstöd för knipövningar som fungerar offline.",
+  "lang": "sv-SE",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f3eb",
+  "theme_color": "#f2efe8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

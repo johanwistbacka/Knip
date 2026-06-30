@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f2efe8" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Knip" />
+    <title>Knip</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Träningsstöd</p>
+          <h1>Knip</h1>
+        </div>
+        <button class="ghost-button" id="nav-home-button" type="button">Hem</button>
+      </header>
+
+      <main>
+        <section class="panel view active" id="home-view" aria-labelledby="home-title">
+          <p class="lead">En lugn rutin för att komma igång och hålla rytmen.</p>
+          <button class="primary-button" id="start-button" type="button">Starta pass</button>
+
+          <div class="home-grid">
+            <button class="secondary-card" id="open-stats-button" type="button">
+              <span class="card-title">Statistik</span>
+              <span class="card-value" id="home-total-sessions">0 pass</span>
+            </button>
+            <button class="secondary-card" id="open-settings-button" type="button">
+              <span class="card-title">Inställningar</span>
+              <span class="card-value" id="home-settings-summary">5 / 5 / 10</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel view" id="session-view" aria-labelledby="session-title">
+          <div class="session-header">
+            <p class="eyebrow" id="session-title">Aktivt pass</p>
+            <p class="progress" id="rep-counter">Repetition 1 av 10</p>
+          </div>
+
+          <div class="timer-card">
+            <p class="phase-label" id="phase-label">Förbered</p>
+            <div class="timer-circle" aria-live="polite">
+              <span id="timer-value">5</span>
+            </div>
+            <div class="phase-bar" aria-hidden="true">
+              <div class="phase-bar-fill" id="phase-bar-fill"></div>
+            </div>
+          </div>
+
+          <div class="session-actions">
+            <button class="primary-button" id="pause-button" type="button">Pausa</button>
+            <button class="ghost-button danger" id="cancel-button" type="button">Avbryt</button>
+          </div>
+        </section>
+
+        <section class="panel view" id="complete-view" aria-labelledby="complete-title">
+          <p class="eyebrow">Pass klart</p>
+          <h2 id="complete-title">Bra jobbat!</h2>
+          <p class="lead" id="complete-summary">Ditt pass är sparat lokalt på enheten.</p>
+          <button class="primary-button" id="restart-button" type="button">Starta nytt pass</button>
+        </section>
+
+        <section class="panel view" id="stats-view" aria-labelledby="stats-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Översikt</p>
+              <h2 id="stats-title">Statistik</h2>
+            </div>
+            <button class="ghost-button" id="close-stats-button" type="button">Stäng</button>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card">
+              <p class="card-title">Pass totalt</p>
+              <p class="stat-value" id="stats-total">0</p>
+            </article>
+            <article class="stat-card">
+              <p class="card-title">Senaste 7 dagar</p>
+              <p class="stat-value" id="stats-week">0</p>
+            </article>
+            <article class="stat-card stat-card-wide">
+              <p class="card-title">Senast genomfört</p>
+              <p class="stat-value small" id="stats-latest">Inget ännu</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel view" id="settings-view" aria-labelledby="settings-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Anpassa</p>
+              <h2 id="settings-title">Inställningar</h2>
+            </div>
+            <button class="ghost-button" id="close-settings-button" type="button">Stäng</button>
+          </div>
+
+          <form id="settings-form" class="settings-form">
+            <label>
+              <span>Kniptid (sekunder)</span>
+              <input id="squeeze-duration" name="squeezeDuration" type="number" min="1" max="120" required />
+            </label>
+            <label>
+              <span>Vilotid (sekunder)</span>
+              <input id="rest-duration" name="restDuration" type="number" min="1" max="120" required />
+            </label>
+            <label>
+              <span>Antal repetitioner</span>
+              <input id="repetitions" name="repetitions" type="number" min="1" max="99" required />
+            </label>
+            <label class="toggle-row">
+              <span>Vibrationsfeedback</span>
+              <input id="vibration-enabled" name="vibrationEnabled" type="checkbox" />
+            </label>
+            <button class="primary-button" type="submit">Spara inställningar</button>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
