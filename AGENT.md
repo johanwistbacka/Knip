@@ -76,3 +76,16 @@ Den aktiva kopian av appen flyttades från arbetsmappen till:
 - `/Users/johan/Documents/Projekt/Knip/`
 
 Filerna i nuvarande arbetsmapp har tagits bort efter flytten. Om vidare ändringar behövs ska arbetet helst göras i projektmappen ovan, eller i en ny session som har den mappen som arbetsyta.
+
+## Arbetskontrakt för kodagent
+
+När användaren ber om en implementation ska agenten arbeta direkt i denna projektmapp och slutföra uppgiften i samma session när det är möjligt.
+
+- Läs först `AGENT.md`, `todo.md` och de relevanta filerna i `resurser/`.
+- Inspektera befintlig kod innan en ändring föreslås eller genomförs.
+- Ändra endast befintliga projektfiler om inte användaren uttryckligen ber om nya filer.
+- Skapa aldrig Python-filer, `main.py`, npm-projekt eller en buildkedja.
+- Behåll snabbstart och befintlig timerlogik när nya programfunktioner läggs till.
+- Gör små, avgränsade patchar och skriv inte om hela filer för en lokal ändring.
+- Efter ändring: kontrollera diffen, kör relevanta tester och rapportera exakt vad som ändrades.
+- Om ett Agent-verktyg inte fungerar ska agenten inte hitta på resultat eller skapa en ersättningsfil. Rapportera blockeraren tydligt.

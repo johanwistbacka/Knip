@@ -1,0 +1,61 @@
+# Local Codex agent for this trusted project.
+model = "gpt-oss:20b"
+model_reasoning_effort = "medium"
+oss_provider = "ollama"
+
+# Let the agent work independently inside the repository. Requests that need
+# broader access are reviewed automatically instead of stopping for routine
+# confirmation.
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+
+# Keep code and prompts local unless a task explicitly requires otherwise.
+web_search = "disabled"
+
+[sandbox_workspace_write]
+network_access = false
+
+# These general-purpose plugins add substantial prompt and tool overhead for a
+# small dependency-free PWA. They remain enabled globally for other projects.
+[plugins."adobe-for-creativity@claude-cowork"]
+enabled = false
+
+[plugins."anthropic-skills@claude-cowork"]
+enabled = false
+
+[plugins."cowork-plugin-management@claude-cowork"]
+enabled = false
+
+[plugins."documents@openai-primary-runtime"]
+enabled = false
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = false
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = false
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = false
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = false
+
+[plugins."chrome@openai-bundled"]
+enabled = false
+
+[plugins."computer-use@openai-bundled"]
+enabled = false
+
+[plugins."visualize@openai-bundled"]
+enabled = false
+
+[plugins."sites@openai-bundled"]
+enabled = false
+
+[plugins."browser@openai-bundled"]
+enabled = false
+
+[plugins."codex-app-tools@openai-bundled"]
+enabled = false

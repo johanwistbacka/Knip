@@ -321,6 +321,17 @@ input:focus-visible {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 18px 40px rgba(67, 93, 88, 0.14);
   display: grid;
   place-items: center;
+  transition: background 250ms ease, color 250ms ease;
+}
+
+.timer-circle.is-squeeze {
+  background: radial-gradient(circle at top, #fff4f2, #f9d9d5 65%, #efc0ba);
+  color: #762d2b;
+}
+
+.timer-circle.is-rest {
+  background: radial-gradient(circle at top, #f4fbf5, #d9efdd 65%, #bfdfc6);
+  color: #235a38;
 }
 
 #timer-value {

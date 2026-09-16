@@ -1,0 +1,74 @@
+# Todo för Knip
+
+Den här listan är vår startpunkt för fortsatt utveckling. Vi börjar med att fatta produktbesluten och rör därefter koden.
+
+## Innan vi börjar koda
+
+- [ ] Sammanställ exakt innehåll för `Avancerad 1-6` från referensbilderna.
+- [ ] Märk varje pass som `kort`, `normal` eller `lång`.
+- [ ] Bestäm vilka långa pass användaren får hoppa över.
+- [ ] Fastställ progressionen genom `Övning 1-6` och vidare till avancerade repetitionspass.
+- [ ] Bestäm om nivåbyte kräver antal dagar, antal genomförda pass eller båda.
+- [ ] Fastställ den mjuka övergången:
+  - dag 1: `1 nytt + 2 gamla pass`
+  - dag 2: `2 nya + 1 gammalt pass`
+  - dag 3: `bara nya pass`
+- [ ] Bestäm vad som händer efter missade dagar eller ett längre uppehåll.
+- [ ] Skissa flöden för första start, dagens pass, nivåbyte och avslutat pass.
+- [ ] Bestäm ljudsignaler för `start`, `knip`, `vila`, byte av kniptyp och avslutat pass.
+- [ ] Bestäm om användaren kan välja ljud, volym och tyst läge.
+- [ ] Definiera påminnelser, tider och snoozeval.
+- [ ] Kontrollera vad iPhone-PWA stödjer för notiser och snooze.
+- [ ] Välj första versionens gamification: progression, streak, veckomål och nivåbelöningar.
+- [ ] Bestäm vilken historik och dagsstatus som ska visas.
+- [ ] Skriv korta instruktioner för varje kniptyp och nödvändig säkerhetsinformation.
+- [ ] Ange acceptanskriterier för den första versionen.
+
+## Första implementationen
+
+- [x] Gör träningsprogrammen datadrivna.
+- [ ] Bygg programflödet för `Övning 1-6`.
+- [ ] Spara aktiv nivå, nivådagar och genomförda pass.
+- [ ] Implementera den mjuka övergången mellan nivåer.
+- [ ] Lägg till ljud för skärmfri träning.
+- [ ] Lägg till val för kortare pass och möjlighet att hoppa över långa pass.
+- [ ] Bygg avslutsskärm med passammanfattning och progression.
+- [ ] Lägg till snoozbara påminnelser utifrån verifierat plattformsstöd.
+- [ ] Lägg till den valda första nivån av gamification.
+- [ ] Testa hela flödet på mobil och som installerad PWA.
+
+## Senare
+
+- [ ] Bygg avancerade repetitionspass.
+- [ ] Lägg till kalender eller veckovy.
+- [ ] Lägg till fler milstolpar och belöningar.
+- [ ] Anpassa påminnelser efter träningsvanor.
+- [ ] Lägg till export och återställning av träningshistorik.
+- [ ] Utvärdera fler program och personliga mål.
+
+## Underlag
+
+- [Utvecklingsidéer](resurser/utvecklingsideer.md)
+- [Övningsprogram 1-6 och progression](resurser/ovningsprogram-1-6-och-progression.md)
+- [Referensanalys och utvecklingsplan](resurser/referensanalys-och-utvecklingsplan.md)
+## Lokal träningsdata och mjuk progression
+
+- [ ] Spara komplett träningshistorik lokalt med versionshanterat dataformat.
+- [ ] Lägg till användarstyrd export av träningshistoriken som JSON.
+- [ ] Räkna progression på tre lokala kalenderdagar i rad, inte tre utspridda träningsdagar.
+- [ ] Visa följden som exempelvis `2 av 3 dagar i rad` och låt användaren själv välja när övergången startar.
+- [ ] Implementera övergången: 1 ny + 2 gamla, 2 nya + 1 gammal, därefter endast den nya övningen.
+- [ ] Låt en missad dag pausa en påbörjad övergång, men återställa kvalificeringsföljden innan övergången.
+- [ ] Testa flera pass samma dag, avbrutna pass, missade dagar och byte av lokal dag/tidszon.
+
+Se [specifikationen för lokal träningsdata och progression](resurser/lokal-traningsdata-och-progression.md).
+# Hoppa över nivå
+
+- [ ] Lägg till åtgärden `Hoppa över nivå` i programvyn med bekräftelse.
+- [ ] Markera nivån som `skipped`; räkna den inte som genomförd och ge ingen träningsdag eller svit.
+- [ ] Gå vidare till nästa tillgängliga nivå och hoppa över redan överhoppade nivåer.
+- [ ] Använd inte en överhoppad nivå som gammal övning i en mjuk övergång.
+- [ ] Avbryt en pågående övergång om användaren hoppar över nivån.
+- [ ] Spara nivåhopp och återaktivering som separata programhändelser.
+- [ ] Låt användaren återaktivera en överhoppad nivå senare.
+- [ ] Dölj eller inaktivera nivåhopp på sista nivån när ingen senare nivå finns.
