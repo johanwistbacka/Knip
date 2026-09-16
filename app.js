@@ -17,9 +17,101 @@ const PHASES = {
   rest: { label: "Vila", settingsKey: "restDuration" }
 };
 
+const EXERCISE_TYPES = {
+  find: {
+    label: "Hitta-rätt-knip",
+    instruction: "Knip ihop runt ändtarmsöppning och urinrör med liten kraft."
+  },
+  strength: {
+    label: "Styrkeknip",
+    instruction: "Knip ihop runt ändtarmsöppning och urinrör och lyft inåt/uppåt med så stor kraft du kan."
+  },
+  endurance: {
+    label: "Uthållighetsknip",
+    instruction: "Knip ihop runt ändtarmsöppning och urinrör och lyft inåt/uppåt – men du behöver inte ta i maximalt."
+  },
+  quick: {
+    label: "Snabba knip",
+    instruction: "Knip snabbt ihop runt ändtarmsöppning och urinrör och lyft inåt/uppåt så kraftigt du kan."
+  }
+};
+
+const EXERCISE_LEVELS = [
+  {
+    id: "exercise-1",
+    title: "Övning 1",
+    position: "Enklast i liggande. Går även att göra sittande eller stående.",
+    sessionsPerDay: 3,
+    recommendedPeriod: { days: 3, label: "3 dagar" },
+    blocks: [{ type: "find", repetitions: 8 }]
+  },
+  {
+    id: "exercise-2",
+    title: "Övning 2",
+    position: "Enklast i liggande. Går även att göra sittande eller stående.",
+    sessionsPerDay: 3,
+    recommendedPeriod: { days: 3, label: "3 dagar" },
+    blocks: [
+      { type: "find", repetitions: 6 },
+      { type: "strength", repetitions: 2 }
+    ]
+  },
+  {
+    id: "exercise-3",
+    title: "Övning 3",
+    position: "Liggande, sittande eller stående.",
+    sessionsPerDay: 3,
+    recommendedPeriod: { days: 3, label: "3 dagar" },
+    blocks: [
+      { type: "find", repetitions: 5 },
+      { type: "strength", repetitions: 5 }
+    ]
+  },
+  {
+    id: "exercise-4",
+    title: "Övning 4",
+    position: "Sittande eller stående.",
+    sessionsPerDay: 3,
+    recommendedPeriod: { minWeeks: 1, maxWeeks: 2, label: "1–2 veckor" },
+    blocks: [
+      { type: "strength", repetitions: 8 },
+      { type: "endurance", repetitions: 1, durationSeconds: 15 }
+    ]
+  },
+  {
+    id: "exercise-5",
+    title: "Övning 5",
+    position: "Stående.",
+    sessionsPerDay: 3,
+    recommendedPeriod: { minWeeks: 1, maxWeeks: 2, label: "1–2 veckor" },
+    blocks: [
+      { type: "strength", repetitions: 10 },
+      { type: "endurance", repetitions: 1, durationSeconds: 25 }
+    ]
+  },
+  {
+    id: "exercise-6",
+    title: "Övning 6",
+    position: "Stående.",
+    sessionsPerDay: 3,
+    recommendedPeriod: {
+      minWeeks: 1,
+      maxWeeks: 2,
+      label: "1–2 veckor",
+      note: "Fortsätt tills den totala träningstiden är 3 månader."
+    },
+    blocks: [
+      { type: "strength", repetitions: 10 },
+      { type: "endurance", repetitions: 1, durationSeconds: 35 },
+      { type: "quick", repetitions: 5 }
+    ]
+  }
+];
+
 const elements = {
   views: {
     home: document.getElementById("home-view"),
+    program: document.getElementById("program-view"),
     session: document.getElementById("session-view"),
     complete: document.getElementById("complete-view"),
     stats: document.getElementById("stats-view"),
@@ -27,6 +119,9 @@ const elements = {
   },
   navHomeButton: document.getElementById("nav-home-button"),
   startButton: document.getElementById("start-button"),
+  openProgramButton: document.getElementById("open-program-button"),
+  closeProgramButton: document.getElementById("close-program-button"),
+  programLevels: document.getElementById("program-levels"),
   openStatsButton: document.getElementById("open-stats-button"),
   closeStatsButton: document.getElementById("close-stats-button"),
   openSettingsButton: document.getElementById("open-settings-button"),
@@ -103,6 +198,92 @@ function showView(name) {
 function updateHomeSummary() {
   elements.homeTotalSessions.textContent = `${state.history.length} pass`;
   elements.homeSettingsSummary.textContent = `${state.settings.squeezeDuration}s / ${state.settings.restDuration}s / ${state.settings.repetitions}`;
+}
+
+function formatExerciseBlock(block, includeDuration = false) {
+  const exerciseType = EXERCISE_TYPES[block.type];
+  const duration = includeDuration && block.durationSeconds
+    ? ` · ${block.durationSeconds} sekunder`
+    : "";
+
+  return `${block.repetitions} ${exerciseType.label}${duration}`;
+}
+
+function renderProgram() {
+  elements.programLevels.replaceChildren();
+
+  EXERCISE_LEVELS.forEach((level) => {
+    const details = document.createElement("details");
+    details.className = "program-level";
+    details.id = level.id;
+
+    const summary = document.createElement("summary");
+    summary.className = "program-level-summary";
+
+    const summaryText = document.createElement("span");
+    summaryText.className = "program-level-summary-text";
+
+    const title = document.createElement("span");
+    title.className = "program-level-title";
+    title.textContent = level.title;
+
+    const preview = document.createElement("span");
+    preview.className = "program-level-preview";
+    preview.textContent = level.blocks.map((block) => formatExerciseBlock(block, true)).join(" + ");
+
+    summaryText.append(title, preview);
+    summary.append(summaryText);
+
+    const content = document.createElement("div");
+    content.className = "program-level-content";
+
+    const blockList = document.createElement("ul");
+    blockList.className = "exercise-block-list";
+
+    level.blocks.forEach((block) => {
+      const exerciseType = EXERCISE_TYPES[block.type];
+      const item = document.createElement("li");
+      item.className = "exercise-block";
+
+      const blockTitle = document.createElement("strong");
+      blockTitle.textContent = formatExerciseBlock(block, true);
+
+      const instruction = document.createElement("p");
+      instruction.textContent = exerciseType.instruction;
+
+      item.append(blockTitle, instruction);
+      blockList.append(item);
+    });
+
+    const metadata = document.createElement("dl");
+    metadata.className = "program-metadata";
+
+    const metadataEntries = [
+      ["Kroppsläge", level.position],
+      ["Frekvens", `${level.sessionsPerDay} gånger om dagen`],
+      ["Rekommenderad period", level.recommendedPeriod.label]
+    ];
+
+    metadataEntries.forEach(([term, description]) => {
+      const termElement = document.createElement("dt");
+      termElement.textContent = term;
+      const descriptionElement = document.createElement("dd");
+      descriptionElement.textContent = description;
+      metadata.append(termElement, descriptionElement);
+    });
+
+    content.append(blockList, metadata);
+
+    if (level.recommendedPeriod.note) {
+      const note = document.createElement("p");
+      note.className = "program-note";
+      note.textContent = level.recommendedPeriod.note;
+      content.append(note);
+    }
+
+    details.append(summary, content);
+    elements.programLevels.append(details);
+  });
 }
 
 function renderStats() {
@@ -265,6 +446,8 @@ function registerServiceWorker() {
 }
 
 elements.startButton.addEventListener("click", startSession);
+elements.openProgramButton.addEventListener("click", () => showView("program"));
+elements.closeProgramButton.addEventListener("click", () => showView("home"));
 elements.restartButton.addEventListener("click", startSession);
 elements.pauseButton.addEventListener("click", () => {
   if (!state.session) {
@@ -309,6 +492,7 @@ elements.settingsForm.addEventListener("submit", (event) => {
 });
 
 updateHomeSummary();
+renderProgram();
 renderStats();
 fillSettingsForm();
 registerServiceWorker();

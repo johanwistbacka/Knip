@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Knip" />
-    <title>Knip</title>
+    <title>Knip – Beta</title>
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icon.svg" />
@@ -18,7 +18,7 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">Träningsstöd</p>
-          <h1>Knip</h1>
+          <h1>Knip <span class="beta-badge">Beta</span></h1>
         </div>
         <button class="ghost-button" id="nav-home-button" type="button">Hem</button>
       </header>
@@ -26,7 +26,10 @@
       <main>
         <section class="panel view active" id="home-view" aria-labelledby="home-title">
           <p class="lead">En lugn rutin för att komma igång och hålla rytmen.</p>
-          <button class="primary-button" id="start-button" type="button">Starta pass</button>
+          <div class="home-actions">
+            <button class="primary-button" id="start-button" type="button">Starta snabbpass</button>
+            <button class="secondary-button" id="open-program-button" type="button">Visa program</button>
+          </div>
 
           <div class="home-grid">
             <button class="secondary-card" id="open-stats-button" type="button">
@@ -38,6 +41,18 @@
               <span class="card-value" id="home-settings-summary">5 / 5 / 10</span>
             </button>
           </div>
+        </section>
+
+        <section class="panel view" id="program-view" aria-labelledby="program-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Träningsprogram</p>
+              <h2 id="program-title">Övning 1–6</h2>
+            </div>
+            <button class="ghost-button" id="close-program-button" type="button">Stäng</button>
+          </div>
+          <p class="lead program-intro">Öppna en nivå för att se knip, kroppsläge och rekommenderad period.</p>
+          <div class="program-levels" id="program-levels"></div>
         </section>
 
         <section class="panel view" id="session-view" aria-labelledby="session-title">
