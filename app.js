@@ -12,43 +12,43 @@ const DEFAULT_SETTINGS = {
 };
 
 const PHASES = {
-  prep: { label: "Förbered", settingsKey: "prepDuration" },
+  prep: { label: "Gör dig redo", settingsKey: "prepDuration" },
   squeeze: { label: "Knip", settingsKey: "squeezeDuration" },
   rest: { label: "Vila", settingsKey: "restDuration" }
 };
 
 const EXERCISE_TYPES = {
   find: {
-    label: "Hitta-rätt-knip",
-    instruction: "Knip ihop runt ändtarmsöppning och urinrör med liten kraft."
+    label: "Känn in",
+    instruction: "Börja med ett lätt knip och känn rörelsen inåt och uppåt."
   },
   strength: {
-    label: "Styrkeknip",
-    instruction: "Knip ihop runt ändtarmsöppning och urinrör och lyft inåt/uppåt med så stor kraft du kan."
+    label: "Stadiga knip",
+    instruction: "Gör ett tydligt knip, fokusera på rörelsen inåt och uppåt och släpp sedan helt."
   },
   endurance: {
-    label: "Uthållighetsknip",
-    instruction: "Knip ihop runt ändtarmsöppning och urinrör och lyft inåt/uppåt – men du behöver inte ta i maximalt."
+    label: "Håll kvar",
+    instruction: "Håll ett jämnt knip inåt och uppåt utan att spänna mer än du behöver."
   },
   quick: {
-    label: "Snabba knip",
-    instruction: "Knip snabbt ihop runt ändtarmsöppning och urinrör och lyft inåt/uppåt så kraftigt du kan."
+    label: "Korta pulser",
+    instruction: "Gör snabba, tydliga knip med full avslappning mellan varje."
   }
 };
 
 const EXERCISE_LEVELS = [
   {
     id: "exercise-1",
-    title: "Övning 1",
-    position: "Enklast i liggande. Går även att göra sittande eller stående.",
+    title: "Steg 1",
+    position: "Börja gärna liggande. Det går också bra att sitta eller stå.",
     sessionsPerDay: 3,
     recommendedPeriod: { days: 3, label: "3 dagar" },
     blocks: [{ type: "find", repetitions: 8 }]
   },
   {
     id: "exercise-2",
-    title: "Övning 2",
-    position: "Enklast i liggande. Går även att göra sittande eller stående.",
+    title: "Steg 2",
+    position: "Börja gärna liggande. Det går också bra att sitta eller stå.",
     sessionsPerDay: 3,
     recommendedPeriod: { days: 3, label: "3 dagar" },
     blocks: [
@@ -58,8 +58,8 @@ const EXERCISE_LEVELS = [
   },
   {
     id: "exercise-3",
-    title: "Övning 3",
-    position: "Liggande, sittande eller stående.",
+    title: "Steg 3",
+    position: "Välj mellan att ligga, sitta eller stå.",
     sessionsPerDay: 3,
     recommendedPeriod: { days: 3, label: "3 dagar" },
     blocks: [
@@ -69,8 +69,8 @@ const EXERCISE_LEVELS = [
   },
   {
     id: "exercise-4",
-    title: "Övning 4",
-    position: "Sittande eller stående.",
+    title: "Steg 4",
+    position: "Sitt eller stå, det som känns bäst.",
     sessionsPerDay: 3,
     recommendedPeriod: { minWeeks: 1, maxWeeks: 2, label: "1–2 veckor" },
     blocks: [
@@ -80,8 +80,8 @@ const EXERCISE_LEVELS = [
   },
   {
     id: "exercise-5",
-    title: "Övning 5",
-    position: "Stående.",
+    title: "Steg 5",
+    position: "Gör övningen stående.",
     sessionsPerDay: 3,
     recommendedPeriod: { minWeeks: 1, maxWeeks: 2, label: "1–2 veckor" },
     blocks: [
@@ -91,14 +91,14 @@ const EXERCISE_LEVELS = [
   },
   {
     id: "exercise-6",
-    title: "Övning 6",
-    position: "Stående.",
+    title: "Steg 6",
+    position: "Gör övningen stående.",
     sessionsPerDay: 3,
     recommendedPeriod: {
       minWeeks: 1,
       maxWeeks: 2,
       label: "1–2 veckor",
-      note: "Fortsätt tills den totala träningstiden är 3 månader."
+      note: "Fortsätt med rutinen tills du har tränat i tre månader."
     },
     blocks: [
       { type: "strength", repetitions: 10 },
@@ -130,6 +130,7 @@ const elements = {
   pauseButton: document.getElementById("pause-button"),
   cancelButton: document.getElementById("cancel-button"),
   phaseLabel: document.getElementById("phase-label"),
+  timerCircle: document.querySelector(".timer-circle"),
   timerValue: document.getElementById("timer-value"),
   phaseBarFill: document.getElementById("phase-bar-fill"),
   repCounter: document.getElementById("rep-counter"),
@@ -196,7 +197,7 @@ function showView(name) {
 }
 
 function updateHomeSummary() {
-  elements.homeTotalSessions.textContent = `${state.history.length} pass`;
+  elements.homeTotalSessions.textContent = `${state.history.length} genomförda`;
   elements.homeSettingsSummary.textContent = `${state.settings.squeezeDuration}s / ${state.settings.restDuration}s / ${state.settings.repetitions}`;
 }
 
@@ -206,7 +207,7 @@ function formatExerciseBlock(block, includeDuration = false) {
     ? ` · ${block.durationSeconds} sekunder`
     : "";
 
-  return `${block.repetitions} ${exerciseType.label}${duration}`;
+  return `${block.repetitions} × ${exerciseType.label}${duration}`;
 }
 
 function renderProgram() {
@@ -259,9 +260,9 @@ function renderProgram() {
     metadata.className = "program-metadata";
 
     const metadataEntries = [
-      ["Kroppsläge", level.position],
-      ["Frekvens", `${level.sessionsPerDay} gånger om dagen`],
-      ["Rekommenderad period", level.recommendedPeriod.label]
+      ["Läge", level.position],
+      ["Pass per dag", String(level.sessionsPerDay)],
+      ["Föreslagen period", level.recommendedPeriod.label]
     ];
 
     metadataEntries.forEach(([term, description]) => {
@@ -300,7 +301,7 @@ function renderStats() {
         dateStyle: "medium",
         timeStyle: "short"
       })
-    : "Inget ännu";
+    : "Inte genomfört ännu";
 }
 
 function fillSettingsForm() {
@@ -340,8 +341,10 @@ function updateSessionUI() {
   const progress = duration > 0 ? (elapsed / duration) * 100 : 0;
 
   elements.phaseLabel.textContent = PHASES[state.session.phaseName].label;
+  elements.timerCircle.classList.toggle("is-squeeze", state.session.phaseName === "squeeze");
+  elements.timerCircle.classList.toggle("is-rest", state.session.phaseName === "rest");
   elements.timerValue.textContent = String(state.session.phaseRemaining);
-  elements.repCounter.textContent = `Repetition ${state.session.repIndex} av ${state.settings.repetitions}`;
+  elements.repCounter.textContent = `Knip ${state.session.repIndex} av ${state.settings.repetitions}`;
   elements.phaseBarFill.style.width = `${Math.max(0, Math.min(progress, 100))}%`;
   elements.pauseButton.textContent = state.session.paused ? "Fortsätt" : "Pausa";
 }
@@ -419,7 +422,7 @@ function completeSession() {
   state.history = state.history.slice(0, 200);
   saveHistory();
 
-  elements.completeSummary.textContent = `Pass sparat ${new Date(record.completedAt).toLocaleString("sv-SE", {
+  elements.completeSummary.textContent = `Dagens pass sparades ${new Date(record.completedAt).toLocaleString("sv-SE", {
     dateStyle: "medium",
     timeStyle: "short"
   })}.`;

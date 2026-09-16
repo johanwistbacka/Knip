@@ -17,7 +17,7 @@
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Träningsstöd</p>
+          <p class="eyebrow">Din rutin</p>
           <h1>Knip <span class="beta-badge">Beta</span></h1>
         </div>
         <button class="ghost-button" id="nav-home-button" type="button">Hem</button>
@@ -25,16 +25,16 @@
 
       <main>
         <section class="panel view active" id="home-view" aria-labelledby="home-title">
-          <p class="lead">En lugn rutin för att komma igång och hålla rytmen.</p>
+          <p class="lead">Ett kort pass i taget, i din egen takt.</p>
           <div class="home-actions">
-            <button class="primary-button" id="start-button" type="button">Starta snabbpass</button>
-            <button class="secondary-button" id="open-program-button" type="button">Visa program</button>
+            <button class="primary-button" id="start-button" type="button">Starta ett pass</button>
+            <button class="secondary-button" id="open-program-button" type="button">Se dina steg</button>
           </div>
 
           <div class="home-grid">
             <button class="secondary-card" id="open-stats-button" type="button">
-              <span class="card-title">Statistik</span>
-              <span class="card-value" id="home-total-sessions">0 pass</span>
+              <span class="card-title">Dina framsteg</span>
+              <span class="card-value" id="home-total-sessions">0 genomförda</span>
             </button>
             <button class="secondary-card" id="open-settings-button" type="button">
               <span class="card-title">Inställningar</span>
@@ -46,23 +46,23 @@
         <section class="panel view" id="program-view" aria-labelledby="program-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Träningsprogram</p>
-              <h2 id="program-title">Övning 1–6</h2>
+              <p class="eyebrow">Ditt upplägg</p>
+              <h2 id="program-title">Steg 1–6</h2>
             </div>
             <button class="ghost-button" id="close-program-button" type="button">Stäng</button>
           </div>
-          <p class="lead program-intro">Öppna en nivå för att se knip, kroppsläge och rekommenderad period.</p>
+          <p class="lead program-intro">Öppna ett steg för att se dagens fokus, läge och hur länge du kan stanna där.</p>
           <div class="program-levels" id="program-levels"></div>
         </section>
 
         <section class="panel view" id="session-view" aria-labelledby="session-title">
           <div class="session-header">
-            <p class="eyebrow" id="session-title">Aktivt pass</p>
-            <p class="progress" id="rep-counter">Repetition 1 av 10</p>
+            <p class="eyebrow" id="session-title">Nu tränar du</p>
+            <p class="progress" id="rep-counter">Knip 1 av 10</p>
           </div>
 
           <div class="timer-card">
-            <p class="phase-label" id="phase-label">Förbered</p>
+            <p class="phase-label" id="phase-label">Gör dig redo</p>
             <div class="timer-circle" aria-live="polite">
               <span id="timer-value">5</span>
             </div>
@@ -78,9 +78,9 @@
         </section>
 
         <section class="panel view" id="complete-view" aria-labelledby="complete-title">
-          <p class="eyebrow">Pass klart</p>
-          <h2 id="complete-title">Bra jobbat!</h2>
-          <p class="lead" id="complete-summary">Ditt pass är sparat lokalt på enheten.</p>
+          <p class="eyebrow">Färdig för idag</p>
+          <h2 id="complete-title">Passet är klart.</h2>
+          <p class="lead" id="complete-summary">Passet är sparat på din enhet.</p>
           <button class="primary-button" id="restart-button" type="button">Starta nytt pass</button>
         </section>
 
@@ -88,23 +88,23 @@
           <div class="section-heading">
             <div>
               <p class="eyebrow">Översikt</p>
-              <h2 id="stats-title">Statistik</h2>
+              <h2 id="stats-title">Din utveckling</h2>
             </div>
             <button class="ghost-button" id="close-stats-button" type="button">Stäng</button>
           </div>
 
           <div class="stats-grid">
             <article class="stat-card">
-              <p class="card-title">Pass totalt</p>
+              <p class="card-title">Dina pass</p>
               <p class="stat-value" id="stats-total">0</p>
             </article>
             <article class="stat-card">
-              <p class="card-title">Senaste 7 dagar</p>
+              <p class="card-title">De senaste 7 dagarna</p>
               <p class="stat-value" id="stats-week">0</p>
             </article>
             <article class="stat-card stat-card-wide">
-              <p class="card-title">Senast genomfört</p>
-              <p class="stat-value small" id="stats-latest">Inget ännu</p>
+              <p class="card-title">Senaste passet</p>
+              <p class="stat-value small" id="stats-latest">Inte genomfört ännu</p>
             </article>
           </div>
         </section>
@@ -112,30 +112,30 @@
         <section class="panel view" id="settings-view" aria-labelledby="settings-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Anpassa</p>
-              <h2 id="settings-title">Inställningar</h2>
+              <p class="eyebrow">Ditt upplägg</p>
+              <h2 id="settings-title">Gör det till ditt</h2>
             </div>
             <button class="ghost-button" id="close-settings-button" type="button">Stäng</button>
           </div>
 
           <form id="settings-form" class="settings-form">
             <label>
-              <span>Kniptid (sekunder)</span>
+              <span>Så länge håller du (sekunder)</span>
               <input id="squeeze-duration" name="squeezeDuration" type="number" min="1" max="120" required />
             </label>
             <label>
-              <span>Vilotid (sekunder)</span>
+              <span>Så länge vilar du (sekunder)</span>
               <input id="rest-duration" name="restDuration" type="number" min="1" max="120" required />
             </label>
             <label>
-              <span>Antal repetitioner</span>
+              <span>Antal knip i passet</span>
               <input id="repetitions" name="repetitions" type="number" min="1" max="99" required />
             </label>
             <label class="toggle-row">
-              <span>Vibrationsfeedback</span>
+              <span>Vibration som stöd</span>
               <input id="vibration-enabled" name="vibrationEnabled" type="checkbox" />
             </label>
-            <button class="primary-button" type="submit">Spara inställningar</button>
+            <button class="primary-button" type="submit">Spara mitt upplägg</button>
           </form>
         </section>
       </main>
