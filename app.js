@@ -8,6 +8,7 @@ const HISTORY_SCHEMA_VERSION = 1;
 const PROGRAM_SCHEMA_VERSION = 2;
 const QUALIFIED_DAYS_REQUIRED = 3;
 const SESSION_AUDIO_SAMPLE_RATE = 8000;
+const APP_CACHE_VERSION = "v20";
 
 const DEFAULT_SETTINGS = {
   prepDuration: 5,
@@ -125,6 +126,7 @@ const elements = {
     settings: document.getElementById("settings-view")
   },
   navHomeButton: document.getElementById("nav-home-button"),
+  cacheVersion: document.getElementById("cache-version"),
   startButton: document.getElementById("start-button"),
   openProgramButton: document.getElementById("open-program-button"),
   closeProgramButton: document.getElementById("close-program-button"),
@@ -1510,6 +1512,7 @@ window.addEventListener("pageshow", () => {
   }
 });
 
+elements.cacheVersion.textContent = `Cache ${APP_CACHE_VERSION}`;
 updateHomeSummary();
 renderProgram();
 renderStats();

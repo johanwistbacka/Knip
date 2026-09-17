@@ -114,6 +114,14 @@ h1 {
   text-transform: uppercase;
 }
 
+.cache-version {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
 h2 {
   font-size: clamp(1.8rem, 6vw, 2.3rem);
 }
