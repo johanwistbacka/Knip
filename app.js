@@ -8,7 +8,8 @@ const HISTORY_SCHEMA_VERSION = 1;
 const PROGRAM_SCHEMA_VERSION = 2;
 const QUALIFIED_DAYS_REQUIRED = 3;
 const SESSION_AUDIO_SAMPLE_RATE = 8000;
-const APP_CACHE_VERSION = "v22";
+const APP_CACHE_VERSION = "v23";
+const TRANSITION_EXPLANATION = "Övergångspasset kör tre passdelar i följd. Dag 1: en ny + två gamla. Dag 2: två nya + en gammal. Dag 3: tre nya. Alla tre delarna räknas som ett komplett pass.";
 
 const DEFAULT_SETTINGS = {
   prepDuration: 5,
@@ -128,6 +129,8 @@ const elements = {
   navHomeButton: document.getElementById("nav-home-button"),
   cacheVersion: document.getElementById("cache-version"),
   startButton: document.getElementById("start-button"),
+  homeSessionDuration: document.getElementById("home-session-duration"),
+  homeTransitionSummary: document.getElementById("home-transition-summary"),
   openProgramButton: document.getElementById("open-program-button"),
   closeProgramButton: document.getElementById("close-program-button"),
   programLevels: document.getElementById("program-levels"),
@@ -363,8 +366,7 @@ function getTransitionDay() {
   return Math.min(3, transition.completedLocalDays.length + (completedToday ? 0 : 1));
 }
 
-function buildProgramBlocks(level, transitionDay) {
-  const transition = state.program.transition;
+function buildProgramBlocks(level, transitionDay, transition = state.program.transition) {
   const sourceLevelIds = !transitionDay || !transition
     ? [level.id]
     : transitionDay === 1
@@ -489,9 +491,9 @@ function getProgramStatus(level) {
 
   if (transition) {
     const transitionTexts = [
-      "1 nytt pass och 2 pass från föregående steg.",
-      "2 nya pass och 1 pass från föregående steg.",
-      "3 nya pass.",
+      "En ny passdel, sedan två från föregående steg.",
+      "Två nya passdelar, sedan en från föregående steg.",
+      "Tre nya passdelar i följd.",
     ];
     const day = getTransitionDay();
     return `Övergång till ${level.title}: dag ${day} av 3. ${transitionTexts[day - 1]}`;
@@ -522,6 +524,17 @@ function updateHomeSummary() {
   const level = getActiveSessionLevel();
   elements.homeSettingsSummary.textContent = `${level.title} · ${level.position}`;
   elements.homeProgramSummary.textContent = getProgramStatus(level);
+  elements.homeSessionDuration.textContent = formatSessionDuration(buildProgramBlocks(level, getTransitionDay()));
+  elements.homeTransitionSummary.hidden = !state.program.transition;
+  elements.homeTransitionSummary.textContent = state.program.transition ? TRANSITION_EXPLANATION : "";
+}
+
+function formatSessionDuration(blocks) {
+  const seconds = Math.ceil(buildSessionTimeline({ blocks }).duration);
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  const time = minutes ? `${minutes} min${remainder ? ` ${remainder} sek` : ""}` : `${remainder} sek`;
+  return `Passlängd: ${time} utan pauser`;
 }
 
 function formatExerciseBlock(block, includeDuration = false) {
@@ -633,7 +646,8 @@ function renderProgram() {
 
     const metadataEntries = [
       ["Läge", level.position],
-      ["Pass per dag", String(level.sessionsPerDay)],
+      ["Rekommenderat", `${level.sessionsPerDay} pass per dag`],
+      ["Vanligt pass", formatSessionDuration(buildProgramBlocks(level, null))],
       ["Föreslagen period", level.recommendedPeriod.label]
     ];
 
@@ -669,8 +683,14 @@ function renderProgram() {
       const action = document.createElement("button");
       action.type = "button";
       action.className = "primary-button";
+      let plannedBlocks = buildProgramBlocks(level, getTransitionDay());
 
       if (!transition && isLevelReadyToAdvance(level)) {
+        plannedBlocks = buildProgramBlocks(getNextLevel(level.id), 1, { fromLevelId: level.id });
+        const explanation = document.createElement("p");
+        explanation.className = "program-status";
+        explanation.textContent = TRANSITION_EXPLANATION;
+        controls.append(explanation);
         action.textContent = `Starta övergång till ${getNextLevel(level.id).title}`;
         action.dataset.action = "start-transition";
         action.dataset.levelId = level.id;
@@ -679,7 +699,10 @@ function renderProgram() {
         action.dataset.action = "start-session";
       }
 
-      controls.append(status, action);
+      const duration = document.createElement("p");
+      duration.className = "session-duration";
+      duration.textContent = formatSessionDuration(plannedBlocks);
+      controls.append(status, duration, action);
       if (getNextLevel(level.id)) {
         const skipButton = document.createElement("button");
         skipButton.type = "button";
@@ -1508,6 +1531,7 @@ elements.settingsForm.addEventListener("submit", (event) => {
 
   saveSettings();
   updateHomeSummary();
+  renderProgram();
   renderStats();
   showView("home");
 });

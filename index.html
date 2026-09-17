@@ -21,7 +21,7 @@
           <div>
             <p class="eyebrow">Din rutin</p>
             <h1>Knip <span class="beta-badge">Beta</span></h1>
-            <p class="cache-version" id="cache-version">Cache v21</p>
+            <p class="cache-version" id="cache-version">Cache v23</p>
           </div>
         </div>
         <button class="ghost-button" id="nav-home-button" type="button">Hem</button>
@@ -31,10 +31,13 @@
         <section class="panel view active" id="home-view" aria-labelledby="home-title">
           <p class="lead">Ett kort pass i taget, i din egen takt.</p>
           <p class="program-status home-program-summary" id="home-program-summary"></p>
+          <p class="program-status" id="home-transition-summary" hidden></p>
           <div class="home-actions">
-            <button class="primary-button" id="start-button" type="button">Starta ett pass</button>
+            <p class="session-duration" id="home-session-duration"></p>
+            <button class="primary-button" id="start-button" type="button" aria-describedby="home-session-duration">Starta ett pass</button>
             <button class="secondary-button" id="open-program-button" type="button">Se dina steg</button>
           </div>
+          <p class="program-status">Tre pass per dag rekommenderas. För ett erbjudande om nivåbyte räcker minst ett komplett pass på ditt aktiva steg per dag i tre dagar i rad. Du väljer själv när du byter.</p>
 
           <div class="home-grid">
             <button class="secondary-card" id="open-stats-button" type="button">
@@ -57,6 +60,8 @@
             <button class="ghost-button" id="close-program-button" type="button">Stäng</button>
           </div>
           <p class="lead program-intro">Öppna ett steg för att se dagens fokus, läge och hur länge du kan stanna där.</p>
+          <p class="program-status">Tre pass per dag är en rekommendation. Nivåbyte erbjuds efter minst ett komplett pass på ditt aktiva steg per dag i tre dagar i rad, även när den föreslagna perioden är längre. Avbrutna pass räknas inte. Bytet är frivilligt.</p>
+          <p class="program-status">Vid nivåbyte kör övergångspasset tre passdelar i följd: dag 1 en ny + två gamla, dag 2 två nya + en gammal, dag 3 tre nya. Delarna räknas tillsammans som ett komplett pass.</p>
           <div class="program-levels" id="program-levels"></div>
         </section>
 

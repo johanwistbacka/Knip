@@ -139,7 +139,7 @@ Förbättringsförslag; punkterna är inte implementerade eller beslutade. Efter
 
 1. **Gör lokal lagring robust.** Validera inlästa historikposter och tidsinställningar, hantera fel från `localStorage` och visa om ett pass inte kunde sparas. Isolerade tester bekräftar att en `null`-post i historiken orsakar undantag och att negativa eller icke-numeriska sparade tider släpps igenom. Bevara giltig historik vid fel.
 2. **Slutför iPhone-verifieringen av ljudspåret.** Användaren har bekräftat offline och export. Den lokala prototypen använder nu ett sammanhängande mediespår som gemensam tidskälla när ljud är på och räknar ikapp mot en monoton klocka när ljud är av. Testa hörbarhet mot podcast, skärmlås, återgång till appen samt paus och fortsätt. Bekräfta även hemskärmsinstallation och kallstart utan nät.
-3. **Gör passets omfattning tydlig före start.** Visa beräknad tid från aktuella inställningar och förklara att övergången innehåller tre passdelar i en körning. Förtydliga skillnaden mellan rekommendationen tre pass per dag och kravet minst ett komplett pass per dag för progression. Steg 4–6 visar 1–2 veckor som föreslagen period medan kvalificeringskravet är tre dagar.
+3. **Klart 2026-09-17: gör passets omfattning tydlig före start.** Passlängd och övergångens tre passdelar visas före start. Rekommendationen tre pass per dag skiljs från kravet minst ett komplett pass på aktiv nivå per dag i tre dagar i rad för erbjudande om nivåbyte. Se verifieringen nedan.
 4. **Uppdatera dagsstatus när appen åter blir synlig.** Startsida och programvy renderas vid start och vissa handlingar, men inte vid dygnsskifte eller återgång från bakgrunden. Kontrollera datumbyte så att gårdagens status inte ligger kvar.
 5. **Förbättra tillgängligheten.** Rätta startsidans `aria-labelledby`, som pekar på ett saknat `home-title`, hantera fokus vid vybyte och testa VoiceOver. Timerns sekundtal är idag en live-region medan fastexten ligger utanför; kontrollera att rätt information läses upp utan störande upprepning.
 6. **Gör avslutet tydligare.** Visa genomförd nivå, passdelar och aktuell progression. Nuvarande sammanfattning visar främst sparningstid och eventuellt slutfört nivåbyte. Se även över formuleringen `Färdig för idag` i förhållande till rekommendationen om flera pass per dag.
@@ -148,3 +148,19 @@ Förbättringsförslag; punkterna är inte implementerade eller beslutade. Efter
 **Rekommenderat nästa utvecklingssteg:** verifiera den sammanhängande ljudprototypen på fysisk iPhone innan lösningen betraktas som fungerande. Kontrollera särskilt samtidig podcast, skärmlås och att fasen är oförändrat synkroniserad efter paus och upplåsning. Därefter stabilitetsomgången för lokal lagring (punkt 1), före avancerade program och påminnelser.
 
 **Kontroller i denna genomgång:** JavaScript-syntax för `app.js` och `service-worker.js`, manifestets JSON och ikonreferenser samt isolerade Node-tester med simulerad DOM för sex nivåer, kvalificerande dagar, flera pass samma dag, avbrutet pass, ordningen i övergångens tre dagar, uppehåll under övergång och exportens JSON-innehåll. Detta är inte ett nytt webbläsar- eller iPhone-test; tidigare webbläsarresultat ovan är historiska verifieringar. Endast dokumentation ändrades.
+
+## Passlängd och övergång före start 2026-09-17
+
+- [x] Visa passlängd nära startknappen på startsidan och i programvyn, samt vanlig passlängd för varje nivå.
+- [x] Använd samma tidslinje som timern och det sammanhängande ljudspåret: en förberedelse, varje repetition, fasta uthållighetstider, inställda knip- och vilotider samt vila efter sista knipet. Övergångens alla tre delar ingår; manuella pauser ingår inte.
+- [x] Visa rätt tid när programknappen startar första övergångsdagen medan snabbstart fortfarande startar nuvarande nivå. Uppdatera båda vyerna när tidsinställningarna sparas.
+- [x] Förklara tre passdelar i en körning: dag 1 en ny + två gamla, dag 2 två nya + en gammal, dag 3 tre nya. Tydliggör rekommendation, kvalificeringskrav och frivilligt nivåbyte.
+- [x] Bevara lokala ljudändringar, träningsupplägg, kvalificeringsregler, timer och lagringsformat. Höj cache och versionsvisning till v23.
+
+Verifierat i isolerad lokal Chrome: 84 tidsfall mot separat förväntad beräkning (sex vanliga nivåer och tre dagar för var och en av de fem nivåövergångarna, med fyra uppsättningar tider). Testerna omfattade standardtider, ändrad förberedelse och knip/vila samt gränserna 1 och 120 sekunder. Standardpassen är 1:25, 1:25, 1:45, 1:45, 2:15 och 3:15. Visad tid i båda vyerna matchade passets tidslinje.
+
+Även verifierat: sparade tidsinställningar, snabbstart, erbjudande och start av övergång, paus/fortsätt, Blob-baserat ljudspår och ljud på/av med bibehållen dold volymkontroll, oförändrad localStorage vid omladdning, cache v23 och offline-snabbstart. Mobilvyer i 320 och 390 px kontrollerades utan horisontellt överflöde; skärmbilder granskades visuellt. Inga JavaScriptundantag eller konsolfel. JavaScript-syntax och diffkontroll godkända. Testkod och skärmbilder ligger utanför projektet.
+
+Begränsning: fysisk iPhone, ljudets hörbarhet mot podcast och skärmlås är inte verifierade i denna ändring; tidigare öppna ljudpunkter kvarstår.
+
+Publiceringsanteckning för beta/cache v23: ändringen levereras via projektets befintliga GitHub Pages-flöde vid push till `main`, på https://johanwistbacka.github.io/Knip/. Appfilerna kopieras till `_site` av GitHub Actions; dokumentation och lokala testfiler ingår inte i webbplatsen. Ingen separat release-tagg behövs för denna webbpublicering. Cacheversionen uppdaterar de statiska appfilerna utan att ändra träningsdata i localStorage.

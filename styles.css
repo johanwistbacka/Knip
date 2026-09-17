@@ -349,6 +349,13 @@ h2 {
   margin-top: 16px;
 }
 
+.session-duration {
+  margin: 0;
+  color: var(--accent-strong);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 .export-button {
   margin-top: 20px;
 }
