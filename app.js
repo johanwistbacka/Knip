@@ -716,7 +716,7 @@ function triggerSqueezeSound() {
 
 function getSoundVolume() {
   const volume = Number(state.settings.soundVolume);
-  return Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 1;
+  return Number.isFinite(volume) ? Math.max(0, Math.min(3, volume)) : 1;
 }
 
 function updateSoundVolumeControls() {
@@ -728,7 +728,7 @@ function updateSoundVolumeControls() {
 }
 
 function setSoundVolume(percent) {
-  state.settings.soundVolume = Math.max(0, Math.min(100, Number(percent) || 0)) / 100;
+  state.settings.soundVolume = Math.max(0, Math.min(300, Number(percent) || 0)) / 100;
   saveSettings();
   updateSoundVolumeControls();
 }
@@ -1083,7 +1083,7 @@ elements.settingsForm.addEventListener("submit", (event) => {
   state.settings.restDuration = Math.max(1, Number(elements.restDuration.value) || DEFAULT_SETTINGS.restDuration);
   state.settings.vibrationEnabled = elements.vibrationEnabled.checked;
   state.settings.soundEnabled = elements.soundEnabled.checked;
-  state.settings.soundVolume = Number(elements.settingsSoundVolume.value) / 100;
+  state.settings.soundVolume = Math.max(0, Math.min(300, Number(elements.settingsSoundVolume.value) || 0)) / 100;
 
   saveSettings();
   updateHomeSummary();
