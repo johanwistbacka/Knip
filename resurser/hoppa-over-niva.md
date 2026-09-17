@@ -36,3 +36,7 @@ Programdata använder `schemaVersion: 2`, med överhoppade nivåer i `levelStatu
 ## Förhållande till progression
 
 Kravet på tre träningsdagar i rad gäller bara genomförda träningspass. Ett nivåhopp uppfyller inte kravet och startar inte den vanliga tredagarsövergången med gamla och nya övningar.
+
+## Utökning godkänd 2026-09-17
+
+Reglerna ovan gäller samtliga tolv nivåer, inklusive Avancerad 1–6. Avancerad 6 kan inte hoppas över eftersom ingen senare nivå finns. Fritt nivåval finns också: användaren kan efter bekräftelse välja vilken nivå som helst, utan genomförandepoäng eller raderad historik. En eventuell övergång avbryts och en överhoppad vald nivå återaktiveras. Valet sparas som `level_selected`; övriga nivåstatusar bevaras. Ett träningsuppehåll kräver inte omstart från Steg 1.

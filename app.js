@@ -8,7 +8,9 @@ const HISTORY_SCHEMA_VERSION = 1;
 const PROGRAM_SCHEMA_VERSION = 2;
 const QUALIFIED_DAYS_REQUIRED = 3;
 const SESSION_AUDIO_SAMPLE_RATE = 8000;
-const APP_CACHE_VERSION = "v23";
+const APP_CACHE_VERSION = "v28";
+// Produktbeslut 2026-09-17; referensbilderna anger inga exakta pulstider.
+const QUICK_TIMING = { squeeze: 1, rest: 2 };
 const TRANSITION_EXPLANATION = "Övergångspasset kör tre passdelar i följd. Dag 1: en ny + två gamla. Dag 2: två nya + en gammal. Dag 3: tre nya. Alla tre delarna räknas som ett komplett pass.";
 
 const DEFAULT_SETTINGS = {
@@ -29,27 +31,90 @@ const PHASES = {
 const EXERCISE_TYPES = {
   find: {
     label: "Känn in",
-    instruction: "Börja med ett lätt knip och känn rörelsen inåt och uppåt."
+    instruction: "Använd liten kraft. Slut lätt kring ändtarmsöppningen och urinröret och känn ett lyft inåt och uppåt. Släpp sedan knipet helt."
   },
   strength: {
     label: "Stadiga knip",
-    instruction: "Gör ett tydligt knip, fokusera på rörelsen inåt och uppåt och släpp sedan helt."
+    instruction: "Knip med mer kraft än när du känner in: slut kring ändtarmsöppningen och urinröret och lyft inåt och uppåt. Håll under kniptiden och släpp helt när vilan börjar."
   },
   endurance: {
     label: "Håll kvar",
-    instruction: "Håll ett jämnt knip inåt och uppåt utan att spänna mer än du behöver."
+    instruction: "Slut kring ändtarmsöppningen och urinröret och behåll lyftet inåt och uppåt under en längre stund. Du behöver inte ta i maximalt. Släpp helt när tiden är slut."
   },
   quick: {
     label: "Korta pulser",
-    instruction: "Gör snabba, tydliga knip med full avslappning mellan varje."
+    instruction: "Slut snabbt kring ändtarmsöppningen och urinröret och lyft inåt och uppåt. Släpp direkt efter det korta knipet och låt musklerna slappna av helt före nästa puls."
   }
 };
+
+// Referens B07–B12: ordningen är en del av programmet, även för återkommande typer.
+const MOVEMENT_INSTRUCTIONS = {
+  lift: "Stå med fötterna isär och tårna lite utåt. Knip och böj knän och höfter tills händerna når strax nedanför knäna, som när du ska ta upp två matkassar. Res dig med knipet kvar och släpp först när du står rak.",
+  walk: "Behåll knipet medan du går runt i rummet. Stanna mot slutet och stå stilla innan du släpper. Lägg märke till hur bäckenbotten sänks när du slappnar av.",
+  cough: "Knip snabbt och hosta kraftigt en gång medan du håller knipet uppe. Släpp sedan helt och vila före nästa puls."
+};
+
+const ADVANCED_LEVELS = [
+  {
+    blocks: [
+      { type: "strength", repetitions: 10 },
+      { type: "endurance", repetitions: 1, durationSeconds: 35 },
+      { type: "strength", repetitions: 10 },
+      { type: "quick", repetitions: 5 }
+    ]
+  },
+  {
+    blocks: [
+      { type: "strength", repetitions: 10 },
+      { type: "endurance", repetitions: 1, durationSeconds: 35 },
+      { type: "strength", repetitions: 10 },
+      { type: "quick", repetitions: 10 }
+    ]
+  },
+  {
+    blocks: [
+      { type: "strength", repetitions: 10, movement: "lift" },
+      { type: "endurance", repetitions: 1, durationSeconds: 45 }
+    ]
+  },
+  {
+    blocks: [
+      { type: "strength", repetitions: 10 },
+      { type: "endurance", repetitions: 1, durationSeconds: 45, movement: "walk" }
+    ]
+  },
+  {
+    blocks: [
+      { type: "strength", repetitions: 10 },
+      { type: "endurance", repetitions: 1, durationSeconds: 60 },
+      { type: "strength", repetitions: 10 },
+      { type: "quick", repetitions: 10, movement: "cough" }
+    ]
+  },
+  {
+    note: "Det här passet kombinerar alla rörelser och ställer höga krav på styrka, uthållighet och koncentration. Blockföljden görs två gånger.",
+    blocks: Array.from({ length: 2 }, () => [
+      { type: "strength", repetitions: 10, movement: "lift", alternatingMovement: true },
+      { type: "endurance", repetitions: 1, durationSeconds: 60, movement: "walk" },
+      { type: "strength", repetitions: 10, movement: "lift", alternatingMovement: true },
+      { type: "quick", repetitions: 10, movement: "cough", alternatingMovement: true }
+    ]).flat()
+  }
+].map((level, index) => ({
+  ...level,
+  id: `advanced-${index + 1}`,
+  title: `Avancerad ${index + 1}`,
+  advanced: true,
+  position: "Gör övningen stående.",
+  sessionsPerDay: index < 4 ? 3 : 2,
+  recommendedPeriod: { minWeeks: 1, maxWeeks: 2, label: "1–2 veckor" }
+}));
 
 const EXERCISE_LEVELS = [
   {
     id: "exercise-1",
     title: "Steg 1",
-    position: "Börja gärna liggande. Det går också bra att sitta eller stå.",
+    position: "Prova att ligga på rygg, mage eller sida. Du kan också sitta eller stå.",
     sessionsPerDay: 3,
     recommendedPeriod: { days: 3, label: "3 dagar" },
     blocks: [{ type: "find", repetitions: 8 }]
@@ -57,7 +122,7 @@ const EXERCISE_LEVELS = [
   {
     id: "exercise-2",
     title: "Steg 2",
-    position: "Börja gärna liggande. Det går också bra att sitta eller stå.",
+    position: "Prova att ligga på rygg, mage eller sida. Du kan också sitta eller stå.",
     sessionsPerDay: 3,
     recommendedPeriod: { days: 3, label: "3 dagar" },
     blocks: [
@@ -107,20 +172,22 @@ const EXERCISE_LEVELS = [
       minWeeks: 1,
       maxWeeks: 2,
       label: "1–2 veckor",
-      note: "Fortsätt med rutinen tills du har tränat i tre månader."
+      note: "Du kan fortsätta här tills du har tränat i tre månader eller välja Avancerad 1."
     },
     blocks: [
       { type: "strength", repetitions: 10 },
       { type: "endurance", repetitions: 1, durationSeconds: 35 },
       { type: "quick", repetitions: 5 }
     ]
-  }
+  },
+  ...ADVANCED_LEVELS
 ];
 
 const elements = {
   views: {
     home: document.getElementById("home-view"),
     program: document.getElementById("program-view"),
+    help: document.getElementById("help-view"),
     session: document.getElementById("session-view"),
     complete: document.getElementById("complete-view"),
     stats: document.getElementById("stats-view"),
@@ -142,6 +209,7 @@ const elements = {
   pauseButton: document.getElementById("pause-button"),
   cancelButton: document.getElementById("cancel-button"),
   phaseLabel: document.getElementById("phase-label"),
+  sessionInstruction: document.getElementById("session-instruction"),
   timerCircle: document.querySelector(".timer-circle"),
   timerValue: document.getElementById("timer-value"),
   phaseBarFill: document.getElementById("phase-bar-fill"),
@@ -150,9 +218,6 @@ const elements = {
   sessionSoundVolume: document.getElementById("session-sound-volume"),
   sessionVolumeOutput: document.getElementById("session-volume-output"),
   completeSummary: document.getElementById("complete-summary"),
-  homeTotalSessions: document.getElementById("home-total-sessions"),
-  homeProgramSummary: document.getElementById("home-program-summary"),
-  homeSettingsSummary: document.getElementById("home-settings-summary"),
   statsTotal: document.getElementById("stats-total"),
   statsWeek: document.getElementById("stats-week"),
   statsLatest: document.getElementById("stats-latest"),
@@ -167,6 +232,12 @@ const elements = {
   previewSoundButton: document.getElementById("preview-sound-button")
 };
 
+// Preserve unreadable originals before replacing a partially recovered value.
+const storageIssues = new Map();
+const storageOriginals = new Map();
+const unreadableStorage = new Set();
+const pendingStorage = new Set();
+
 const state = {
   settings: loadSettings(),
   history: loadHistory(),
@@ -179,39 +250,143 @@ let audioContext = null;
 let sessionAudio = null;
 let sessionAudioUrl = null;
 
-function loadSettings() {
-  const saved = localStorage.getItem(STORAGE_KEYS.settings);
-  if (!saved) {
-    return { ...DEFAULT_SETTINGS };
-  }
+function renderStorageStatus() {
+  const messages = [...new Set(storageIssues.values())];
+  if (pendingStorage.size) messages.push("Ändringar är inte sparade på enheten. Behåll appen öppen, försök spara igen eller exportera historiken nu.");
+  document.getElementById("storage-message").textContent = messages.join(" ");
+  document.getElementById("storage-notice").hidden = messages.length === 0;
+  document.getElementById("retry-storage-button").hidden = pendingStorage.size === 0;
+}
 
+function readStorage(key) {
   try {
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+    const raw = localStorage.getItem(key);
+    if (raw === null) return null;
+    storageOriginals.set(key, raw);
+    const parsed = JSON.parse(raw);
+    if (parsed === null) noteInvalidStorage(key);
+    return parsed;
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    if (!storageOriginals.has(key)) unreadableStorage.add(key);
+    storageIssues.set(key, "Lokal data kunde inte läsas. Originalet lämnas orört. Exportera nya pass före omladdning.");
+    return null;
   }
+}
+
+function noteInvalidStorage(key) {
+  storageIssues.set(key, "Felaktig lokal data hittades. Giltiga uppgifter används; originalet bevaras för återhämtning och följer med i exporten.");
+}
+
+function writeStorage(key, value) {
+  pendingStorage.add(key);
+  try {
+    // A failed read must never be followed by overwriting unknown training data.
+    if (unreadableStorage.has(key)) throw new Error("Unreadable original");
+    if (storageIssues.has(key) && storageOriginals.has(key)) {
+      const backupKey = `${key}.recovery`;
+      const original = storageOriginals.get(key);
+      const existing = localStorage.getItem(backupKey);
+      if (existing !== null && existing !== original) throw new Error("Existing recovery data");
+      localStorage.setItem(backupKey, original);
+    }
+    localStorage.setItem(key, JSON.stringify(value));
+    pendingStorage.delete(key);
+    renderStorageStatus();
+    return true;
+  } catch {
+    renderStorageStatus();
+    return false;
+  }
+}
+
+function isObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function validTimestamp(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value)
+    && validLocalDay(value.slice(0, 10)) && Number.isFinite(Date.parse(value));
+}
+
+function validLocalDay(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T12:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function normalizeSettings(saved) {
+  const result = { ...DEFAULT_SETTINGS };
+  if (!isObject(saved)) return result;
+  for (const key of ["prepDuration", "squeezeDuration", "restDuration"]) {
+    if (Number.isInteger(saved[key]) && saved[key] >= 1 && saved[key] <= 120) result[key] = saved[key];
+  }
+  for (const key of ["soundEnabled", "vibrationEnabled"]) {
+    if (typeof saved[key] === "boolean") result[key] = saved[key];
+  }
+  if (typeof saved.soundVolume === "number" && Number.isFinite(saved.soundVolume)
+    && saved.soundVolume >= 0 && saved.soundVolume <= 8) result.soundVolume = saved.soundVolume;
+  return result;
+}
+
+function loadSettings() {
+  const saved = readStorage(STORAGE_KEYS.settings);
+  const settings = normalizeSettings(saved);
+  if (saved !== null && (!isObject(saved) || Object.keys(DEFAULT_SETTINGS).some(
+    (key) => key in saved && saved[key] !== settings[key]
+  ))) noteInvalidStorage(STORAGE_KEYS.settings);
+  return settings;
 }
 
 function saveSettings() {
-  localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+  return writeStorage(STORAGE_KEYS.settings, state.settings);
+}
+
+function normalizeRecord(record) {
+  if (!isObject(record)) return null;
+  const status = record.status ?? (record.completed === false ? "cancelled" : "completed");
+  if (!["completed", "cancelled"].includes(status)) return null;
+  const timestamp = status === "completed" ? record.completedAt : record.cancelledAt || record.endedAt;
+  if (!validTimestamp(timestamp)) return null;
+  if (record.startedAt != null && !validTimestamp(record.startedAt)) return null;
+  if (record.transitionDay != null && ![1, 2, 3].includes(record.transitionDay)) return null;
+  // Older records may lack level/block metadata. Keep them in statistics/export.
+  if (record.schemaVersion != null && record.schemaVersion !== HISTORY_SCHEMA_VERSION) return null;
+  if (record.levelId != null && !getLevel(record.levelId)) return null;
+  if (record.blocks != null && (!Array.isArray(record.blocks) || !record.blocks.every((block) =>
+    isObject(block) && Object.hasOwn(EXERCISE_TYPES, block.type)
+    && Number.isInteger(block.repetitions) && block.repetitions > 0
+    && (block.durationSeconds == null || (Number.isInteger(block.durationSeconds) && block.durationSeconds >= 1 && block.durationSeconds <= 120))
+    && (block.sourceLevelId == null || getLevel(block.sourceLevelId))
+    && (block.transitionPosition == null || [1, 2, 3].includes(block.transitionPosition))
+    && (status !== "completed" || (block.completed !== false
+      && (block.completedRepetitions == null || block.completedRepetitions === block.repetitions)))
+    && (block.completedRepetitions == null || (Number.isInteger(block.completedRepetitions)
+      && block.completedRepetitions >= 0 && block.completedRepetitions <= block.repetitions))
+  ))) return null;
+  if (record.completed === false && status === "completed") return null;
+  return {
+    ...record, status,
+    localDay: validLocalDay(record.localDay) ? record.localDay : getLocalDay(new Date(timestamp))
+  };
 }
 
 function loadHistory() {
-  const saved = localStorage.getItem(STORAGE_KEYS.history);
-  if (!saved) {
+  const saved = readStorage(STORAGE_KEYS.history);
+  if (saved === null) return [];
+  if (!Array.isArray(saved)) {
+    noteInvalidStorage(STORAGE_KEYS.history);
     return [];
   }
-
-  try {
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  const records = saved.map(normalizeRecord).filter(Boolean);
+  if (records.length !== saved.length || saved.some((record, index) =>
+    records[index]?.localDay !== record?.localDay && record?.localDay != null
+  )) noteInvalidStorage(STORAGE_KEYS.history);
+  return records.sort((a, b) => Date.parse(b.completedAt || b.cancelledAt || b.endedAt)
+    - Date.parse(a.completedAt || a.cancelledAt || a.endedAt));
 }
 
 function saveHistory() {
-  localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(state.history));
+  return writeStorage(STORAGE_KEYS.history, state.history);
 }
 
 function defaultProgram() {
@@ -249,15 +424,15 @@ function isLevelSkipped(levelId) {
 
 function loadProgram() {
   const fallback = defaultProgram();
-  const saved = localStorage.getItem(STORAGE_KEYS.program);
+  const saved = readStorage(STORAGE_KEYS.program);
 
-  if (!saved) {
-    return fallback;
-  }
+  if (saved === null) return fallback;
 
   try {
-    const parsed = JSON.parse(saved);
-    if (!parsed || !getLevel(parsed.activeLevelId)) {
+    const parsed = saved;
+    if (!isObject(parsed) || !getLevel(parsed.activeLevelId)
+      || (parsed.schemaVersion != null && ![1, PROGRAM_SCHEMA_VERSION].includes(parsed.schemaVersion))) {
+      noteInvalidStorage(STORAGE_KEYS.program);
       return fallback;
     }
 
@@ -274,31 +449,50 @@ function loadProgram() {
       && getLevel(transition.toLevelId)
       && !levelStatuses[transition.fromLevelId]
       && !levelStatuses[transition.toLevelId]
+      && transition.fromLevelId === parsed.activeLevelId
+      && EXERCISE_LEVELS.findIndex((level) => level.id === transition.toLevelId)
+        > EXERCISE_LEVELS.findIndex((level) => level.id === transition.fromLevelId)
+      && typeof transition.id === "string" && transition.id.length > 0
       && Array.isArray(transition.completedLocalDays);
+    const events = Array.isArray(parsed.events) ? parsed.events.filter((event) =>
+      isObject(event) && ["level_skipped", "level_reactivated", "level_selected", "level_advanced"].includes(event.type)
+      && validTimestamp(event.timestamp) && getLevel(event.fromLevelId) && getLevel(event.toLevelId)
+    ) : [];
+    if ((transition && (!hasValidTransition || transition.completedLocalDays.some((day) => !validLocalDay(day))))
+      || (parsed.events != null && (!Array.isArray(parsed.events) || events.length !== parsed.events.length))) {
+      noteInvalidStorage(STORAGE_KEYS.program);
+    }
 
     return {
       schemaVersion: PROGRAM_SCHEMA_VERSION,
       activeLevelId: parsed.activeLevelId,
       levelStatuses,
-      events: Array.isArray(parsed.events) ? parsed.events : [],
+      events,
       transition: hasValidTransition
         ? {
           id: transition.id || createId(),
           fromLevelId: transition.fromLevelId,
           toLevelId: transition.toLevelId,
           completedLocalDays: Array.from(
-            new Set(transition.completedLocalDays.filter((day) => typeof day === "string"))
+            new Set(transition.completedLocalDays.filter(validLocalDay))
           ).slice(0, 3)
         }
         : null
     };
   } catch {
+    noteInvalidStorage(STORAGE_KEYS.program);
     return fallback;
   }
 }
 
 function saveProgram() {
-  localStorage.setItem(STORAGE_KEYS.program, JSON.stringify(state.program));
+  // Do not persist progression ahead of the training record that earned it.
+  if (pendingStorage.has(STORAGE_KEYS.history)) {
+    pendingStorage.add(STORAGE_KEYS.program);
+    renderStorageStatus();
+    return false;
+  }
+  return writeStorage(STORAGE_KEYS.program, state.program);
 }
 
 function getLocalDay(date = new Date()) {
@@ -432,11 +626,27 @@ function reactivateLevel(levelId) {
   changeProgramLevel("level_reactivated", previousLevelId, levelId);
 }
 
+function selectLevel(levelId) {
+  const level = getLevel(levelId);
+  const current = getActiveSessionLevel();
+  if (state.session || !level || levelId === current.id) return;
+  const transitionText = state.program.transition ? " Den pågående övergången avbryts." : "";
+  if (!window.confirm(`Välj ${level.title} som aktiv nivå?${transitionText} Historiken behålls. Valet räknas inte som ett genomfört pass.`)) return;
+  delete state.program.levelStatuses[levelId];
+  changeProgramLevel("level_selected", current.id, levelId);
+}
+
 function startTransition(levelId) {
   const level = getLevel(levelId);
   const nextLevel = getNextLevel(levelId);
 
   if (state.session || state.program.transition || !level || !nextLevel || isLevelSkipped(levelId) || state.program.activeLevelId !== levelId || !isLevelReadyToAdvance(level)) {
+    return;
+  }
+
+  if (nextLevel.advanced) {
+    changeProgramLevel("level_advanced", level.id, nextLevel.id);
+    startSession();
     return;
   }
 
@@ -501,49 +711,127 @@ function getProgramStatus(level) {
 
   const nextLevel = getNextLevel(level.id);
   if (!nextLevel) {
-    return "Fortsätt med rutinen tills du har tränat i tre månader.";
+    return "Du är på sista tillgängliga nivån. Fortsätt här eller välj en annan nivå i programmet.";
   }
 
   const requiredDays = getRequiredQualifiedDays(level);
   const streak = getQualifiedDayStreak(level.id);
   if (isLevelReadyToAdvance(level)) {
-    return `Du har ${streak} av ${requiredDays} kvalificerande dagar i följd. Du kan starta övergången till ${nextLevel.title}.`;
+    return `Du har ${streak} av ${requiredDays} kvalificerande dagar i följd. Du kan ${nextLevel.advanced ? "byta direkt" : "starta övergången"} till ${nextLevel.title}.`;
   }
 
   return `${streak} av ${requiredDays} kvalificerande dagar i följd mot ${nextLevel.title}.`;
 }
 
 function showView(name) {
+  elements.navHomeButton.hidden = name === "home";
   Object.entries(elements.views).forEach(([key, view]) => {
     view.classList.toggle("active", key === name);
   });
+  const heading = document.getElementById(elements.views[name].getAttribute("aria-labelledby"));
+  if (heading) {
+    heading.tabIndex = -1;
+    heading.focus();
+  }
 }
+
+let helpReturnButton = null;
+document.querySelectorAll("[data-open-help]").forEach((button) => {
+  button.addEventListener("click", () => {
+    helpReturnButton = button;
+    showView("help");
+  });
+});
+document.getElementById("close-help-button").addEventListener("click", () => {
+  showView(helpReturnButton?.dataset.openHelp || "home");
+  helpReturnButton?.focus();
+});
+Object.values(EXERCISE_TYPES).forEach((type) => {
+  const item = document.createElement("li");
+  item.className = "exercise-block";
+  const title = document.createElement("h3");
+  title.textContent = type.label;
+  const description = document.createElement("p");
+  description.textContent = type.instruction;
+  item.append(title, description);
+  document.getElementById("help-exercise-types").append(item);
+});
 
 function updateHomeSummary() {
-  elements.homeTotalSessions.textContent = `${completedRecords().length} genomförda`;
   const level = getActiveSessionLevel();
-  elements.homeSettingsSummary.textContent = `${level.title} · ${level.position}`;
-  elements.homeProgramSummary.textContent = getProgramStatus(level);
-  elements.homeSessionDuration.textContent = formatSessionDuration(buildProgramBlocks(level, getTransitionDay()));
+  document.getElementById("home-title").textContent = level.title;
+  const movementHost = document.getElementById("home-movement");
+  if (movementHost.dataset.levelId !== level.id) {
+    const instructions = renderMovementInstructions(level);
+    if (instructions) instructions.querySelector("summary").textContent = "Inför passet";
+    movementHost.replaceChildren(...(instructions ? [instructions] : []));
+    movementHost.dataset.levelId = level.id;
+  }
+  elements.homeSessionDuration.textContent = formatSessionDuration(buildProgramBlocks(level, getTransitionDay()), true);
   elements.homeTransitionSummary.hidden = !state.program.transition;
-  elements.homeTransitionSummary.textContent = state.program.transition ? TRANSITION_EXPLANATION : "";
+  elements.homeTransitionSummary.textContent = state.program.transition
+    ? `Övergång · dag ${getTransitionDay()} av 3 · tre passdelar`
+    : "";
 }
 
-function formatSessionDuration(blocks) {
+function formatSessionDuration(blocks, compact = false) {
   const seconds = Math.ceil(buildSessionTimeline({ blocks }).duration);
   const minutes = Math.floor(seconds / 60);
   const remainder = seconds % 60;
   const time = minutes ? `${minutes} min${remainder ? ` ${remainder} sek` : ""}` : `${remainder} sek`;
-  return `Passlängd: ${time} utan pauser`;
+  if (compact) return time;
+  return `Passlängd: ${time} utan pauser · ${seconds < 180 ? "Kort pass" : seconds < 300 ? "Normalt pass" : "Långt pass"}`;
 }
 
 function formatExerciseBlock(block, includeDuration = false) {
   const exerciseType = EXERCISE_TYPES[block.type];
-  const duration = includeDuration && block.durationSeconds
+  const duration = includeDuration && block.type === "quick"
+    ? ` · ${QUICK_TIMING.squeeze} sek knip / ${QUICK_TIMING.rest} sek vila`
+    : includeDuration && block.durationSeconds
     ? ` · ${block.durationSeconds} sekunder`
     : "";
 
-  return `${block.repetitions} × ${exerciseType.label}${duration}`;
+  const movement = block.movement ? ` · ${{ lift: "lyft", walk: "gång", cough: "hosta" }[block.movement]}${block.alternatingMovement ? " på vartannat knip" : ""}` : "";
+  return `${block.repetitions} × ${exerciseType.label}${duration}${movement}`;
+}
+
+function renderMovementInstructions(level) {
+  const movements = [...new Set(level.blocks.map((block) => block.movement).filter(Boolean))];
+  if (!level.advanced) return null;
+  const details = document.createElement("details");
+  details.className = "movement-instructions";
+  details.dataset.instructionLevel = level.id;
+  const summary = document.createElement("summary");
+  summary.textContent = movements.length ? "Så gör du rörelsen" : "Så gör du knipen";
+  details.append(summary);
+  [...new Set(level.blocks.map((block) => block.type))].forEach((type) => {
+    const paragraph = document.createElement("p");
+    paragraph.textContent = `${EXERCISE_TYPES[type].label}: ${EXERCISE_TYPES[type].instruction}`;
+    details.append(paragraph);
+  });
+  if (level.note) {
+    const note = document.createElement("p");
+    note.textContent = level.note;
+    details.append(note);
+  }
+  movements.forEach((movement) => {
+    const paragraph = document.createElement("p");
+    const alternating = level.blocks.some((block) => block.movement === movement && block.alternatingMovement);
+    paragraph.textContent = MOVEMENT_INSTRUCTIONS[movement]
+      + (alternating ? " Gör rörelsen på repetition 2, 4, 6, 8 och 10. Räkningen börjar om i varje block." : "")
+      + (movement === "cough" ? " Hostan sker under pulsens enda knipsekund; därefter följer två sekunders vila." : "");
+    details.append(paragraph);
+  });
+  return details;
+}
+
+function getMovementCue(block, repetition) {
+  if (!block.movement || (block.alternatingMovement && repetition % 2 !== 0)) return "";
+  return {
+    lift: "Lyft – stå rak innan du släpper.",
+    walk: "Gå – stanna innan du släpper.",
+    cough: "Hosta en gång under knipet."
+  }[block.movement];
 }
 
 function renderTransitionPreview(level) {
@@ -589,6 +877,13 @@ function renderTransitionPreview(level) {
 }
 
 function renderProgram() {
+  const focused = document.activeElement;
+  const focusedLevel = focused?.closest(".program-level")?.id;
+  const focusedAction = focused?.dataset.action;
+  const focusedInstruction = focused?.closest(".movement-instructions")?.dataset.instructionLevel;
+  const openInstructions = [...elements.programLevels.querySelectorAll(".movement-instructions[open]")]
+    .map((item) => `${item.closest(".program-level").id}/${item.dataset.instructionLevel}`);
+  const openLevels = [...elements.programLevels.querySelectorAll("details[open]")].map((item) => item.id);
   elements.programLevels.replaceChildren();
   const activeLevel = getActiveSessionLevel();
   const transition = state.program.transition;
@@ -597,7 +892,7 @@ function renderProgram() {
     const details = document.createElement("details");
     details.className = "program-level";
     details.id = level.id;
-    details.open = level.id === activeLevel.id;
+    details.open = level.id === activeLevel.id || openLevels.includes(level.id);
 
     if (level.id === activeLevel.id) {
       details.classList.add("is-active");
@@ -615,7 +910,9 @@ function renderProgram() {
 
     const preview = document.createElement("span");
     preview.className = "program-level-preview";
-    preview.textContent = level.blocks.map((block) => formatExerciseBlock(block, true)).join(" + ");
+    preview.textContent = level.advanced
+      ? `${level.blocks.length} block · ${formatSessionDuration(buildProgramBlocks(level, null)).replace("Passlängd: ", "")}`
+      : level.blocks.map((block) => formatExerciseBlock(block, true)).join(" + ");
 
     summaryText.append(title, preview);
     summary.append(summaryText);
@@ -623,7 +920,7 @@ function renderProgram() {
     const content = document.createElement("div");
     content.className = "program-level-content";
 
-    const blockList = document.createElement("ul");
+    const blockList = document.createElement("ol");
     blockList.className = "exercise-block-list";
 
     level.blocks.forEach((block) => {
@@ -637,7 +934,8 @@ function renderProgram() {
       const instruction = document.createElement("p");
       instruction.textContent = exerciseType.instruction;
 
-      item.append(blockTitle, instruction);
+      item.append(blockTitle);
+      if (!level.advanced) item.append(instruction);
       blockList.append(item);
     });
 
@@ -660,6 +958,8 @@ function renderProgram() {
     });
 
     content.append(blockList, metadata);
+    const movementInstructions = renderMovementInstructions(level);
+    if (movementInstructions) content.append(movementInstructions);
 
     if (level.recommendedPeriod.note) {
       const note = document.createElement("p");
@@ -686,12 +986,17 @@ function renderProgram() {
       let plannedBlocks = buildProgramBlocks(level, getTransitionDay());
 
       if (!transition && isLevelReadyToAdvance(level)) {
-        plannedBlocks = buildProgramBlocks(getNextLevel(level.id), 1, { fromLevelId: level.id });
+        const nextLevel = getNextLevel(level.id);
+        plannedBlocks = buildProgramBlocks(nextLevel, nextLevel.advanced ? null : 1, { fromLevelId: level.id });
         const explanation = document.createElement("p");
         explanation.className = "program-status";
-        explanation.textContent = TRANSITION_EXPLANATION;
+        explanation.textContent = nextLevel.advanced
+          ? `Du byter direkt till ${nextLevel.title}, utan blandade passdelar. Du kan också fortsätta på din nuvarande nivå via startsidan.`
+          : TRANSITION_EXPLANATION;
         controls.append(explanation);
-        action.textContent = `Starta övergång till ${getNextLevel(level.id).title}`;
+        const nextInstructions = renderMovementInstructions(nextLevel);
+        if (nextInstructions) controls.append(nextInstructions);
+        action.textContent = nextLevel.advanced ? `Byt till ${nextLevel.title} och starta pass` : `Starta övergång till ${nextLevel.title}`;
         action.dataset.action = "start-transition";
         action.dataset.levelId = level.id;
       } else {
@@ -731,13 +1036,34 @@ function renderProgram() {
       content.append(controls);
     }
 
+    if (level.id !== activeLevel.id && !isLevelSkipped(level.id)) {
+      const select = document.createElement("button");
+      select.type = "button";
+      select.className = "secondary-button";
+      select.textContent = `Välj ${level.title}`;
+      select.dataset.action = "select-level";
+      select.dataset.levelId = level.id;
+      content.append(select);
+    }
+
     details.append(summary, content);
     elements.programLevels.append(details);
   });
+  elements.programLevels.querySelectorAll(".movement-instructions").forEach((item) => {
+    item.open = openInstructions.includes(`${item.closest(".program-level").id}/${item.dataset.instructionLevel}`);
+  });
+  if (focusedLevel) {
+    const level = document.getElementById(focusedLevel);
+    const target = focusedInstruction
+      ? level?.querySelector(`[data-instruction-level="${focusedInstruction}"] summary`)
+      : focusedAction
+      ? level?.querySelector(`[data-action="${focusedAction}"]`) : level?.querySelector("summary");
+    (target || level?.querySelector("summary"))?.focus({ preventScroll: true });
+  }
 }
 
 function renderStats() {
-  const records = completedRecords();
+  const records = completedRecords().sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt));
   const total = records.length;
   const now = Date.now();
   const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -888,16 +1214,13 @@ function setSoundEnabled(soundEnabled) {
 }
 
 function getPhaseDuration(phaseName) {
-  const phase = PHASES[phaseName];
-  const block = getCurrentBlock();
-  if (phaseName === "squeeze" && block?.durationSeconds) {
-    return block.durationSeconds;
-  }
-  return state.settings[phase.settingsKey];
+  return getBlockPhaseDuration(getCurrentBlock(), phaseName);
 }
 
-function getBlockSqueezeDuration(block) {
-  return block.durationSeconds || state.settings.squeezeDuration;
+function getBlockPhaseDuration(block, phaseName) {
+  if (block?.type === "quick" && phaseName !== "prep") return QUICK_TIMING[phaseName];
+  if (phaseName === "squeeze" && block?.durationSeconds) return block.durationSeconds;
+  return state.settings[PHASES[phaseName].settingsKey];
 }
 
 function buildSessionTimeline(session) {
@@ -912,8 +1235,8 @@ function buildSessionTimeline(session) {
   addSegment("prep", state.settings.prepDuration, 0, 1);
   session.blocks.forEach((block, blockIndex) => {
     for (let repIndex = 1; repIndex <= block.repetitions; repIndex += 1) {
-      addSegment("squeeze", getBlockSqueezeDuration(block), blockIndex, repIndex);
-      addSegment("rest", state.settings.restDuration, blockIndex, repIndex);
+      addSegment("squeeze", getBlockPhaseDuration(block, "squeeze"), blockIndex, repIndex);
+      addSegment("rest", getBlockPhaseDuration(block, "rest"), blockIndex, repIndex);
     }
   });
 
@@ -929,6 +1252,7 @@ function buildSession() {
     trainingMode: transitionDay ? "transition" : "program",
     levelId: level.id,
     transitionDay,
+    transitionId: state.program.transition?.id || null,
     blocks: buildProgramBlocks(level, transitionDay),
     blockIndex: 0,
     repIndex: 1,
@@ -967,10 +1291,23 @@ function updateSessionUI() {
   const sessionParts = Math.max(...state.session.blocks.map((item) => item.transitionPosition));
   const partText = sessionParts > 1 ? ` · Passdel ${block.transitionPosition} av ${sessionParts}` : "";
 
-  elements.phaseLabel.textContent = `${PHASES[state.session.phaseName].label} · ${exercise.label}`;
+  const phaseText = `${state.session.paused ? "Pausat · " : ""}${PHASES[state.session.phaseName].label} · ${exercise.label}`;
+  if (elements.phaseLabel.textContent !== phaseText) elements.phaseLabel.textContent = phaseText;
+  const instruction = state.session.phaseName === "rest"
+    ? "Släpp knipet helt. Låt mage, skinkor och lår vara avspända."
+    : state.session.phaseName === "squeeze" && getLevel(state.session.levelId)?.advanced
+      ? getMovementCue(block, state.session.repIndex) || (block.type === "quick" ? "Knip kort och släpp helt." : "Behåll knipet tills vilan börjar.")
+      : exercise.instruction;
+  if (elements.sessionInstruction.textContent !== instruction) elements.sessionInstruction.textContent = instruction;
   elements.timerCircle.classList.toggle("is-squeeze", state.session.phaseName === "squeeze");
   elements.timerCircle.classList.toggle("is-rest", state.session.phaseName === "rest");
   elements.timerValue.textContent = String(state.session.phaseRemaining);
+  elements.timerCircle.setAttribute("aria-label", `${state.session.phaseRemaining} sekunder kvar i fasen`);
+  const announcementKey = `${state.session.timelineIndex}:${state.session.paused}`;
+  if (state.session.announcementKey !== announcementKey) {
+    state.session.announcementKey = announcementKey;
+    document.getElementById("session-announcement").textContent = `${phaseText}. ${state.session.phaseRemaining} sekunder. Repetition ${state.session.repIndex} av ${block.repetitions}${partText}. ${state.session.phaseName === "squeeze" ? getMovementCue(block, state.session.repIndex) : ""}`;
+  }
   elements.repCounter.textContent = `${exercise.label} ${state.session.repIndex} av ${block.repetitions}${partText}`;
   elements.phaseBarFill.style.width = `${Math.max(0, Math.min(progress, 100))}%`;
   elements.pauseButton.textContent = state.session.paused ? "Fortsätt" : "Pausa";
@@ -1097,23 +1434,37 @@ function configureMediaSession() {
   }
 }
 
-function playSessionAudioElement(session, playFallbackCue = false) {
-  const playPromise = sessionAudio.play();
+function setAudioNotice(message = "") {
+  document.getElementById("audio-notice").textContent = message;
+}
+
+function playSessionAudioElement(session) {
+  const audio = sessionAudio;
+  session.audioStarting = true;
+  const playPromise = audio.play();
   if (!playPromise) {
+    session.audioStarting = false;
     updateMediaSessionState("playing");
     return;
   }
 
-  playPromise.then(() => updateMediaSessionState("playing")).catch(() => {
-    if (state.session !== session) {
+  playPromise.then(() => {
+    if (state.session !== session || sessionAudio !== audio) return;
+    session.audioStarting = false;
+    if (!session.paused) {
+      setAudioNotice();
+      updateMediaSessionState("playing");
+    }
+  }).catch(() => {
+    if (state.session !== session || sessionAudio !== audio || session.paused) {
       return;
     }
-    session.usesMediaAudio = false;
-    session.lastClockTime = performance.now();
+    session.audioStarting = false;
+    session.elapsedSeconds = Math.max(session.elapsedSeconds, audio.currentTime || 0);
+    session.paused = true;
     clearSessionAudio();
-    if (playFallbackCue) {
-      triggerSound("start");
-    }
+    setAudioNotice("Ljudet kunde inte starta. Passet är pausat. Tryck Fortsätt för att försöka igen, eller stäng av ljudet och fortsätt med timern.");
+    updateSessionUI();
   });
 }
 
@@ -1145,24 +1496,34 @@ function startSessionAudio() {
   session.usesMediaAudio = true;
   configureMediaSession();
 
-  sessionAudio.addEventListener("ended", () => {
-    if (state.session === session && !session.paused) {
+  const audio = sessionAudio;
+  audio.addEventListener("error", () => {
+    if (state.session !== session || sessionAudio !== audio) return;
+    session.elapsedSeconds = Math.max(session.elapsedSeconds, audio.currentTime || 0);
+    session.paused = true;
+    clearSessionAudio();
+    setAudioNotice("Ljudet kunde inte spelas. Passet är pausat. Försök med Fortsätt eller stäng av ljudet.");
+    updateSessionUI();
+  });
+  audio.addEventListener("ended", () => {
+    if (state.session === session && sessionAudio === audio && !session.paused) {
       session.elapsedSeconds = session.timeline.duration;
       syncSessionProgress();
     }
   });
-  sessionAudio.addEventListener("pause", () => {
-    if (state.session !== session || !session.usesMediaAudio || session.paused || sessionAudio?.ended) {
+  audio.addEventListener("pause", () => {
+    if (state.session !== session || sessionAudio !== audio || !session.usesMediaAudio || session.paused || audio.ended) {
       return;
     }
 
     session.elapsedSeconds = sessionAudio.currentTime;
     session.paused = true;
+    setAudioNotice("Ljuduppspelningen avbröts och passet pausades. Tryck Fortsätt när du är redo.");
     updateMediaSessionState("paused");
     updateSessionUI();
   });
 
-  playSessionAudioElement(session, session.elapsedSeconds === 0);
+  playSessionAudioElement(session);
 }
 
 function syncSessionClock() {
@@ -1271,6 +1632,7 @@ function startSession() {
   clearInterval(tickTimer);
   clearSessionAudio();
   state.session = buildSession();
+  setAudioNotice();
   showView("session");
   updateSessionUI();
   if (state.settings.soundEnabled) {
@@ -1319,6 +1681,7 @@ function createSessionRecord(status, timestamp) {
     timeZone: getTimeZone(),
     levelId: session.levelId,
     transitionDay: session.transitionDay,
+    transitionId: session.transitionId,
     blocks: session.blocks.map((block, blockIndex) => {
       const completedRepetitions = getCompletedRepetitions(blockIndex, status);
       return {
@@ -1327,6 +1690,7 @@ function createSessionRecord(status, timestamp) {
         completedRepetitions,
         completed: completedRepetitions === block.repetitions,
         durationSeconds: block.durationSeconds,
+        ...(block.movement ? { movement: block.movement, alternatingMovement: Boolean(block.alternatingMovement) } : {}),
         sourceLevelId: block.sourceLevelId,
         transitionPosition: block.transitionPosition
       };
@@ -1359,15 +1723,28 @@ function completeSession() {
   const completedAt = new Date();
   const record = createSessionRecord("completed", completedAt);
   state.history.unshift(record);
-  saveHistory();
+  const saved = saveHistory();
   const transitionCompleted = updateProgramAfterCompletion(record);
   const completedLevel = getLevel(record.levelId);
   stopSession();
 
-  elements.completeSummary.textContent = `Dagens pass sparades ${new Date(record.completedAt).toLocaleString("sv-SE", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  })}.${transitionCompleted ? ` ${completedLevel?.title || "Nästa steg"} är nu ditt aktiva steg.` : ""}`;
+  const parts = [...new Set(record.blocks.map((block) => block.transitionPosition))];
+  const partLabels = parts.map((position) => {
+    const blocks = record.blocks.filter((block) => block.transitionPosition === position);
+    return `Passdel ${position}: ${getLevel(blocks[0].sourceLevelId).title} – ${blocks.map((block) => formatExerciseBlock(block, true)).join(" + ")}`;
+  });
+  elements.completeSummary.textContent = `${completedLevel.title} genomfört${record.transitionDay ? `, övergångsdag ${record.transitionDay} av 3` : ""}. ${parts.length} av ${parts.length} ${parts.length === 1 ? "passdel klar" : "passdelar klara"}.`;
+  document.getElementById("complete-parts").replaceChildren(...partLabels.map((label) => {
+    const item = document.createElement("li");
+    item.textContent = label;
+    return item;
+  }));
+  document.getElementById("complete-progression").textContent = transitionCompleted
+    ? `${completedLevel.title} är nu ditt aktiva steg. ${getProgramStatus(completedLevel)}`
+    : getProgramStatus(getActiveSessionLevel());
+  document.getElementById("complete-saved").textContent = saved
+    ? `Passet sparades ${completedAt.toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" })}.`
+    : "Passet är genomfört men kunde inte sparas på enheten. Exportera historiken eller försök spara igen.";
 
   updateHomeSummary();
   renderProgram();
@@ -1399,7 +1776,9 @@ function exportHistory() {
     exportedAt: exportedAt.toISOString(),
     timeZone: getTimeZone(),
     program: state.program,
-    records: state.history
+    records: state.history,
+    unsavedChanges: [...pendingStorage],
+    recovery: getRecoveryData()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -1414,7 +1793,7 @@ function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
     let reloadingForUpdate = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (reloadingForUpdate || state.session) {
+      if (reloadingForUpdate || state.session || pendingStorage.size) {
         return;
       }
 
@@ -1432,7 +1811,10 @@ function registerServiceWorker() {
 
 elements.startButton.addEventListener("click", startSession);
 elements.openProgramButton.addEventListener("click", () => showView("program"));
-elements.closeProgramButton.addEventListener("click", () => showView("home"));
+elements.closeProgramButton.addEventListener("click", () => {
+  showView("home");
+  elements.openProgramButton.focus();
+});
 elements.restartButton.addEventListener("click", startSession);
 elements.pauseButton.addEventListener("click", () => {
   if (!state.session) {
@@ -1448,6 +1830,7 @@ elements.sessionSoundButton.addEventListener("click", () => {
   }
 
   setSoundEnabled(!state.settings.soundEnabled);
+  setAudioNotice();
   if (!state.session) {
     return;
   }
@@ -1474,13 +1857,19 @@ elements.openStatsButton.addEventListener("click", () => {
   renderStats();
   showView("stats");
 });
-elements.closeStatsButton.addEventListener("click", () => showView("home"));
+elements.closeStatsButton.addEventListener("click", () => {
+  showView("home");
+  elements.openStatsButton.focus();
+});
 
 elements.openSettingsButton.addEventListener("click", () => {
   fillSettingsForm();
   showView("settings");
 });
-elements.closeSettingsButton.addEventListener("click", () => showView("home"));
+elements.closeSettingsButton.addEventListener("click", () => {
+  showView("home");
+  elements.openSettingsButton.focus();
+});
 elements.soundEnabled.addEventListener("input", () => {
   setSoundEnabled(elements.soundEnabled.checked);
 });
@@ -1495,6 +1884,11 @@ elements.settingsSoundVolume.addEventListener("input", () => {
 elements.programLevels.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) {
+    return;
+  }
+
+  if (button.dataset.action === "select-level") {
+    selectLevel(button.dataset.levelId);
     return;
   }
 
@@ -1523,8 +1917,8 @@ elements.exportHistoryButton.addEventListener("click", exportHistory);
 elements.settingsForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  state.settings.squeezeDuration = Math.max(1, Number(elements.squeezeDuration.value) || DEFAULT_SETTINGS.squeezeDuration);
-  state.settings.restDuration = Math.max(1, Number(elements.restDuration.value) || DEFAULT_SETTINGS.restDuration);
+  state.settings.squeezeDuration = normalizeSettings({ squeezeDuration: Number(elements.squeezeDuration.value) }).squeezeDuration;
+  state.settings.restDuration = normalizeSettings({ restDuration: Number(elements.restDuration.value) }).restDuration;
   state.settings.vibrationEnabled = elements.vibrationEnabled.checked;
   state.settings.soundEnabled = elements.soundEnabled.checked;
   state.settings.soundVolume = Math.max(0, Math.min(800, Number(elements.settingsSoundVolume.value) || 0)) / 100;
@@ -1536,17 +1930,73 @@ elements.settingsForm.addEventListener("submit", (event) => {
   showView("home");
 });
 
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && state.session && !state.session.paused) {
-    syncSessionProgress();
+function getRecoveryData() {
+  const recovery = {};
+  for (const key of Object.values(STORAGE_KEYS)) {
+    if (storageIssues.has(key) && storageOriginals.has(key)) recovery[key] = storageOriginals.get(key);
+    try {
+      const backup = localStorage.getItem(`${key}.recovery`);
+      if (backup !== null) recovery[`${key}.recovery`] = backup;
+    } catch { /* Current in-memory records remain exportable without storage access. */ }
   }
-});
+  return recovery;
+}
 
-window.addEventListener("pageshow", () => {
-  if (state.session && !state.session.paused) {
-    syncSessionProgress();
+document.getElementById("retry-storage-button").addEventListener("click", () => {
+  if (pendingStorage.has(STORAGE_KEYS.history)) saveHistory();
+  if (pendingStorage.has(STORAGE_KEYS.program)) saveProgram();
+  if (pendingStorage.has(STORAGE_KEYS.settings)) saveSettings();
+  if (!pendingStorage.has(STORAGE_KEYS.history) && elements.views.complete.classList.contains("active")) {
+    document.getElementById("complete-saved").textContent = "Passet är nu sparat på enheten.";
   }
 });
+document.getElementById("storage-export-button").addEventListener("click", exportHistory);
+
+let displayedDay = getLocalDay();
+let dayTimer = null;
+function refreshDayStatus(force = false) {
+  const today = getLocalDay();
+  if (force || today !== displayedDay) {
+    displayedDay = today;
+    updateHomeSummary();
+    renderProgram();
+    renderStats();
+  }
+  clearTimeout(dayTimer);
+  const now = new Date();
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  // Recheck clock/time-zone changes too, without touching an ongoing session.
+  dayTimer = window.setTimeout(refreshDayStatus, Math.min(60000, Math.max(1, midnight - now + 50)));
+}
+function resumeApp() {
+  refreshDayStatus(true);
+  if (state.session && !state.session.paused) {
+    if (state.session.usesMediaAudio && !state.session.audioStarting && sessionAudio?.paused && !sessionAudio.ended) {
+      state.session.elapsedSeconds = sessionAudio.currentTime;
+      state.session.paused = true;
+      setAudioNotice("Ljuduppspelningen avbröts och passet pausades. Tryck Fortsätt när du är redo.");
+      updateMediaSessionState("paused");
+      updateSessionUI();
+    } else {
+      syncSessionProgress();
+    }
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") resumeApp();
+});
+window.addEventListener("pageshow", resumeApp);
+window.addEventListener("focus", resumeApp);
+
+// If the history write succeeded but the program write failed, replay only
+// records tied to this exact transition. Older records retain their old behavior.
+const savedTransition = state.program.transition;
+if (savedTransition) {
+  for (const record of [...completedRecords()].reverse()) {
+    if (record.transitionId === savedTransition.id
+      && !savedTransition.completedLocalDays.includes(record.localDay)) updateProgramAfterCompletion(record);
+  }
+}
 
 elements.cacheVersion.textContent = `Cache ${APP_CACHE_VERSION}`;
 updateHomeSummary();
@@ -1554,3 +2004,6 @@ renderProgram();
 renderStats();
 fillSettingsForm();
 registerServiceWorker();
+
+renderStorageStatus();
+refreshDayStatus();

@@ -11,7 +11,7 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="knip-logo.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="knip-logo.png" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=28" />
   </head>
   <body>
     <div class="app-shell">
@@ -19,67 +19,113 @@
         <div class="brand-lockup">
           <img class="brand-logo" src="knip-logo.svg" alt="" width="64" height="64" />
           <div>
-            <p class="eyebrow">Din rutin</p>
             <h1>Knip <span class="beta-badge">Beta</span></h1>
-            <p class="cache-version" id="cache-version">Cache v23</p>
           </div>
         </div>
-        <button class="ghost-button" id="nav-home-button" type="button">Hem</button>
+        <button class="ghost-button" id="nav-home-button" type="button" hidden>Hem</button>
       </header>
 
+      <aside id="storage-notice" class="storage-notice" hidden aria-label="Lokal lagring">
+        <p id="storage-message" role="alert"></p>
+        <button class="secondary-button" id="retry-storage-button" type="button">Försök spara igen</button>
+        <button class="secondary-button" id="storage-export-button" type="button">Exportera historiken nu</button>
+      </aside>
       <main>
         <section class="panel view active" id="home-view" aria-labelledby="home-title">
-          <p class="lead">Ett kort pass i taget, i din egen takt.</p>
-          <p class="program-status home-program-summary" id="home-program-summary"></p>
+          <p class="eyebrow">Ditt nästa pass</p>
+          <h2 id="home-title">Steg 1</h2>
+          <p class="session-duration" id="home-session-duration"></p>
           <p class="program-status" id="home-transition-summary" hidden></p>
           <div class="home-actions">
-            <p class="session-duration" id="home-session-duration"></p>
-            <button class="primary-button" id="start-button" type="button" aria-describedby="home-session-duration">Starta ett pass</button>
-            <button class="secondary-button" id="open-program-button" type="button">Se dina steg</button>
+            <button class="primary-button" id="start-button" type="button" aria-describedby="home-session-duration home-transition-summary">Starta ett pass</button>
           </div>
-          <p class="program-status">Tre pass per dag rekommenderas. För ett erbjudande om nivåbyte räcker minst ett komplett pass på ditt aktiva steg per dag i tre dagar i rad. Du väljer själv när du byter.</p>
-
-          <div class="home-grid">
-            <button class="secondary-card" id="open-stats-button" type="button">
-              <span class="card-title">Dina framsteg</span>
-              <span class="card-value" id="home-total-sessions">0 genomförda</span>
-            </button>
-            <button class="secondary-card" id="open-settings-button" type="button">
-              <span class="card-title">Inställningar</span>
-              <span class="card-value" id="home-settings-summary">5 / 5 / 10</span>
-            </button>
-          </div>
+          <div class="home-preparation" id="home-movement"></div>
+          <nav class="home-navigation" aria-label="Utforska Knip">
+            <button id="open-program-button" type="button">Program</button>
+            <button id="open-stats-button" type="button">Framsteg</button>
+            <button id="open-settings-button" type="button">Inställningar</button>
+            <button data-open-help="home" type="button">Hjälp</button>
+          </nav>
         </section>
 
         <section class="panel view" id="program-view" aria-labelledby="program-title">
           <div class="section-heading">
             <div>
               <p class="eyebrow">Ditt upplägg</p>
-              <h2 id="program-title">Steg 1–6</h2>
+              <h2 id="program-title">Ditt program</h2>
             </div>
             <button class="ghost-button" id="close-program-button" type="button">Stäng</button>
           </div>
           <p class="lead program-intro">Öppna ett steg för att se dagens fokus, läge och hur länge du kan stanna där.</p>
-          <p class="program-status">Tre pass per dag är en rekommendation. Nivåbyte erbjuds efter minst ett komplett pass på ditt aktiva steg per dag i tre dagar i rad, även när den föreslagna perioden är längre. Avbrutna pass räknas inte. Bytet är frivilligt.</p>
-          <p class="program-status">Vid nivåbyte kör övergångspasset tre passdelar i följd: dag 1 en ny + två gamla, dag 2 två nya + en gammal, dag 3 tre nya. Delarna räknas tillsammans som ett komplett pass.</p>
+          <button class="secondary-button help-link" data-open-help="program" type="button">Hjälp med träningen</button>
+          <p class="program-status">Tre pass per dag rekommenderas på Steg 1–6 och Avancerad 1–4, två på Avancerad 5–6. Nivåbyte erbjuds efter minst ett komplett pass på ditt aktiva steg per dag i tre dagar i rad, även när den föreslagna perioden är längre. Avbrutna pass räknas inte. Bytet är frivilligt.</p>
+          <p class="program-status">Mellan grundprogrammets nivåer kör övergångspasset tre passdelar i följd: dag 1 en ny + två gamla, dag 2 två nya + en gammal, dag 3 tre nya. Delarna räknas tillsammans som ett komplett pass.</p>
+          <p class="program-status">Till och mellan avancerade nivåer sker bytet direkt, utan blandade pass. Du kan välja valfri nivå. Ett uppehåll behåller din nivå och historik.</p>
           <div class="program-levels" id="program-levels"></div>
+        </section>
+
+        <section class="panel view" id="help-view" aria-labelledby="help-title">
+          <div class="section-heading">
+            <h2 id="help-title">Hjälp med träningen</h2>
+            <button class="ghost-button" id="close-help-button" type="button">Tillbaka</button>
+          </div>
+          <p class="lead program-intro">Lär känna rörelsen före passet. Beskrivningarna av penis och pung nedan är till för dig som har den anatomin.</p>
+          <div class="training-help">
+            <details open>
+              <summary>De fyra kniptyperna</summary>
+              <ul class="exercise-block-list" id="help-exercise-types"></ul>
+              <p>Korta pulser har alltid 1 sekund knip och 2 sekunder vila, också efter sista pulsen. Med ljud på hörs en signal per puls; vilan är tyst. Detta tempo är valt för Knip och är inte en medicinsk rekommendation.</p>
+            </details>
+            <details>
+              <summary>Hitta rörelsen</summary>
+              <p>Tänk att du håller tillbaka gaser och känn hur det sluter sig kring ändtarmsöppningen. Föreställ dig sedan att rörelsen fortsätter framåt och lyfter inåt, mot naveln.</p>
+              <p>En tankebild är ett blixtlås som dras igen bakifrån och framåt. När du släpper knipet öppnas det igen. Du kan också tänka att penis dras lite in i kroppen samtidigt som pungen lyfts.</p>
+              <p>Om du vill kan du använda en spegel för att se om penisroten dras inåt och pungen höjs. Ett annat sätt är att lägga några fingrar på området mellan pung och ändtarmsöppning och känna efter ett litet lyft.</p>
+            </details>
+            <details>
+              <summary>Kroppslägen och avslappning</summary>
+              <p>Prova vilket läge som gör rörelsen lättast att känna: rygg, sida eller mage, med benen i olika lägen. Du kan också sitta eller stå. När du sitter kan du luta dig framåt med armbågarna mot knäna. Stående kan du prova med tårna något inåt eller utåt.</p>
+              <p>Låt mage, skinkor och lår vara stilla i stället för att hjälpa till med knipet. Släpp knipet helt under vilan och känn skillnaden mellan lyftet och avslappningen.</p>
+              <p>Stegens rekommenderade kroppslägen finns i programmet.</p>
+            </details>
+            <details>
+              <summary>Träningsrutin och nästa steg</summary>
+              <p>Grundupplägget rekommenderar tre pass om dagen. Den föreslagna perioden är tre dagar på Steg 1–3 och en till två veckor på Steg 4–6. Avancerad 1–6 har perioden en till två veckor: tre pass per dag på Avancerad 1–4 och två på Avancerad 5–6. Du kan stanna kvar på din nivå.</p>
+              <p>Knip erbjuder nivåbyte efter minst ett komplett pass på ditt aktiva steg per dag i tre dagar i rad. Det är appens regel för erbjudandet, även om stegets föreslagna träningsperiod är längre. Du bestämmer om och när du byter.</p>
+              <p>Vid byte inom grundprogrammet består varje pass av tre delar: första övergångsdagen en ny och två gamla, andra dagen två nya och en gammal, tredje dagen tre nya. Alla delarna tillsammans är ett komplett pass. Ett avbrott för inte övergången framåt; en missad dag pausar den.</p>
+              <p>Till och mellan avancerade nivåer byter du direkt, utan blandade pass. Du kan även välja valfri nivå i programmet. Ett uppehåll tar inte bort din aktiva nivå eller historik; följden av kvalificerande dagar kan däremot brytas.</p>
+            </details>
+            <details>
+              <summary>Knip i vardagen</summary>
+              <p>Rörelserna kan också användas utanför ett guidat pass: ett kort knip innan du hostar, ett stadigt knip vid ett lyft eller ett uthållighetsknip vid några tillfällen när du går. Släpp sedan knipet och slappna av.</p>
+              <p>Dessa vardagsexempel är inte extra träningsblock och registreras inte i appens historik.</p>
+            </details>
+            <details>
+              <summary>Om instruktionernas omfattning</summary>
+              <p>Knip ger allmänna övningsbeskrivningar, inte en individuell medicinsk bedömning. Hjälpen är ännu inte komplett: råd om andning, smärta och när träning bör avbrytas behöver kompletteras med granskat underlag.</p>
+            </details>
+          </div>
         </section>
 
         <section class="panel view" id="session-view" aria-labelledby="session-title">
           <div class="session-header">
-            <p class="eyebrow" id="session-title">Nu tränar du</p>
+            <h2 class="eyebrow" id="session-title">Nu tränar du</h2>
             <p class="progress" id="rep-counter">Knip 1 av 10</p>
           </div>
 
           <div class="timer-card">
             <p class="phase-label" id="phase-label">Gör dig redo</p>
-            <div class="timer-circle" aria-live="polite">
-              <span id="timer-value">5</span>
+            <div class="timer-circle" role="timer" aria-live="off" aria-label="5 sekunder kvar i fasen">
+              <span id="timer-value" aria-hidden="true">5</span>
             </div>
             <div class="phase-bar" aria-hidden="true">
               <div class="phase-bar-fill" id="phase-bar-fill"></div>
             </div>
           </div>
+
+          <p class="sr-only" id="session-announcement" role="status" aria-atomic="true"></p>
+          <p class="program-status" id="session-instruction"></p>
+          <p class="program-status" id="audio-notice" role="status"></p>
 
           <div class="session-audio-controls">
             <button class="sound-toggle-button" id="session-sound-button" type="button" aria-pressed="false">
@@ -101,9 +147,12 @@
         </section>
 
         <section class="panel view" id="complete-view" aria-labelledby="complete-title">
-          <p class="eyebrow">Färdig för idag</p>
+          <p class="eyebrow">Ett pass genomfört</p>
           <h2 id="complete-title">Passet är klart.</h2>
           <p class="lead" id="complete-summary">Passet är sparat på din enhet.</p>
+          <ol id="complete-parts" class="completion-parts"></ol>
+          <p id="complete-progression" class="program-status"></p>
+          <p id="complete-saved" class="history-note"></p>
           <button class="primary-button" id="restart-button" type="button">Starta nytt pass</button>
         </section>
 
@@ -143,14 +192,16 @@
             <button class="ghost-button" id="close-settings-button" type="button">Stäng</button>
           </div>
 
+          <p class="cache-version" id="cache-version">Cache v28</p>
           <form id="settings-form" class="settings-form">
+            <p class="settings-note" id="timing-note">Kniptiden gäller Känn in och Stadiga knip. Håll kvar har fasta tider på 15, 25, 35, 45 eller 60 sekunder beroende på steg. Vilotiden gäller dessa tre typer. Korta pulser använder alltid 1 sekund knip och 2 sekunder vila.</p>
             <label>
               <span>Så länge håller du (sekunder)</span>
-              <input id="squeeze-duration" name="squeezeDuration" type="number" min="1" max="120" required />
+              <input id="squeeze-duration" name="squeezeDuration" type="number" min="1" max="120" aria-describedby="timing-note" required />
             </label>
             <label>
               <span>Så länge vilar du (sekunder)</span>
-              <input id="rest-duration" name="restDuration" type="number" min="1" max="120" required />
+              <input id="rest-duration" name="restDuration" type="number" min="1" max="120" aria-describedby="timing-note" required />
             </label>
             <label class="toggle-row">
               <span>Vibration som stöd</span>
@@ -168,6 +219,7 @@
               <input id="settings-sound-volume" name="soundVolume" type="range" min="0" max="800" step="25" value="100" />
             </label>
             <p class="settings-note">Ett kort ljud varje sekund hjälper dig att hålla knipet. Viloperioderna är tysta. Över 100 % förstärker Knip; högsta nivån motsvarar cirka +18 dB.</p>
+            <p class="settings-note">På iPhone kan telefonens volymknappar styra ljudnivån i stället för reglaget. Podcast och skärmlås kan avbryta uppspelningen. Om ljudet avbryts, återgå till Knip och kontrollera pausläget innan du fortsätter.</p>
             <button class="secondary-button" id="preview-sound-button" type="button">Testa ljudet</button>
             <button class="primary-button" type="submit">Spara mitt upplägg</button>
           </form>
@@ -175,6 +227,6 @@
       </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=28"></script>
   </body>
 </html>

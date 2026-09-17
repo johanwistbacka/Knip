@@ -1,68 +1,61 @@
-const CACHE_NAME = "knip-cache-v23";
+const CACHE_PREFIX = `knip-cache-${encodeURIComponent(new URL(self.registration.scope).pathname)}-`;
+const CACHE_NAME = `${CACHE_PREFIX}v28`;
 const APP_FILES = [
   "./",
   "index.html",
   "styles.css",
+  "styles.css?v=28",
   "app.js",
+  "app.js?v=28",
   "manifest.json",
   "service-worker.js",
   "knip-logo.svg",
   "knip-logo.png"
 ];
+const APP_URLS = new Set(APP_FILES.map((file) => new URL(file, self.registration.scope).href));
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_FILES))
-  );
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(APP_FILES.map((file) => new Request(file, { cache: "reload" })));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    for (const key of await caches.keys()) {
+      if (key === CACHE_NAME) continue;
+      let owned = key.startsWith(CACHE_PREFIX);
+      // Migrate old names only when every entry belongs to this installation.
+      if (/^knip-cache-v\d+$/.test(key)) {
+        const cache = await caches.open(key);
+        const requests = await cache.keys();
+        owned = requests.length > 0 && requests.every((request) => APP_URLS.has(request.url));
+      }
+      if (owned) await caches.delete(key);
+    }
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
-    return;
-  }
+  const request = event.request;
+  const url = new URL(request.url);
+  if (request.method !== "GET" || !url.href.startsWith(self.registration.scope)) return;
 
-  if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse.ok) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put("index.html", responseClone));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match("index.html").then((cachedResponse) => cachedResponse || Response.error()))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request)
-        .then((networkResponse) => {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
-          return networkResponse;
-        })
-        .catch(() => caches.match("index.html"));
-    })
-  );
+  const navigation = request.mode === "navigate";
+  if (!navigation && !APP_URLS.has(url.href)) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // Keep installed HTML and scripts from the same version, including offline.
+    const cached = await cache.match(navigation ? "index.html" : request);
+    if (cached) return cached;
+    try {
+      return await fetch(request);
+    } catch {
+      // An HTML document must never masquerade as JavaScript, CSS or an image.
+      return Response.error();
+    }
+  })());
 });
