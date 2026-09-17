@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
 const HISTORY_SCHEMA_VERSION = 1;
 const PROGRAM_SCHEMA_VERSION = 2;
 const QUALIFIED_DAYS_REQUIRED = 3;
+const SESSION_AUDIO_SAMPLE_RATE = 8000;
 
 const DEFAULT_SETTINGS = {
   prepDuration: 5,
@@ -170,6 +171,8 @@ const state = {
 
 let tickTimer = null;
 let audioContext = null;
+let sessionAudio = null;
+let sessionAudioUrl = null;
 
 function loadSettings() {
   const saved = localStorage.getItem(STORAGE_KEYS.settings);
@@ -791,7 +794,10 @@ function triggerSound(cue, force = false) {
       { frequency: 554, offset: 0.12, duration: 0.1 },
       { frequency: 659, offset: 0.24, duration: 0.16 }
     ],
-    squeezeTick: [{ frequency: 554, duration: 0.08, volume: 0.1 }],
+    squeezeTick: [
+      { frequency: 880, duration: 0.18, volume: 0.1 },
+      { frequency: 1320, duration: 0.18, volume: 0.08 }
+    ],
     complete: [
       { frequency: 523, duration: 0.16 },
       { frequency: 659, offset: 0.18, duration: 0.16 },
@@ -837,6 +843,7 @@ function setSoundVolume(percent) {
   state.settings.soundVolume = Math.max(0, Math.min(800, Number(percent) || 0)) / 100;
   saveSettings();
   updateSoundVolumeControls();
+  updateSessionAudioVolume();
 }
 
 function updateSessionSoundControl() {
@@ -862,11 +869,34 @@ function getPhaseDuration(phaseName) {
   return state.settings[phase.settingsKey];
 }
 
+function getBlockSqueezeDuration(block) {
+  return block.durationSeconds || state.settings.squeezeDuration;
+}
+
+function buildSessionTimeline(session) {
+  const segments = [];
+  let cursor = 0;
+  const addSegment = (phaseName, duration, blockIndex, repIndex) => {
+    const start = cursor;
+    cursor += duration;
+    segments.push({ phaseName, start, end: cursor, blockIndex, repIndex });
+  };
+
+  addSegment("prep", state.settings.prepDuration, 0, 1);
+  session.blocks.forEach((block, blockIndex) => {
+    for (let repIndex = 1; repIndex <= block.repetitions; repIndex += 1) {
+      addSegment("squeeze", getBlockSqueezeDuration(block), blockIndex, repIndex);
+      addSegment("rest", state.settings.restDuration, blockIndex, repIndex);
+    }
+  });
+
+  return { segments, duration: cursor };
+}
+
 function buildSession() {
   const level = getActiveSessionLevel();
   const transitionDay = state.program.transition ? getTransitionDay() : null;
-
-  return {
+  const session = {
     id: createId(),
     startedAt: new Date().toISOString(),
     trainingMode: transitionDay ? "transition" : "program",
@@ -877,8 +907,16 @@ function buildSession() {
     repIndex: 1,
     phaseName: "prep",
     phaseRemaining: state.settings.prepDuration,
-    paused: false
+    paused: false,
+    elapsedSeconds: 0,
+    lastClockTime: performance.now(),
+    timelineIndex: 0,
+    usesMediaAudio: false,
+    fallbackCueKey: null
   };
+
+  session.timeline = buildSessionTimeline(session);
+  return session;
 }
 
 function getCurrentBlock() {
@@ -912,47 +950,254 @@ function updateSessionUI() {
   updateSessionSoundControl();
 }
 
-function advancePhase() {
-  if (!state.session) {
-    return;
-  }
+function writeWaveHeader(view, sampleCount) {
+  const writeText = (offset, value) => {
+    for (let index = 0; index < value.length; index += 1) {
+      view.setUint8(offset + index, value.charCodeAt(index));
+    }
+  };
 
-  if (state.session.phaseName === "prep") {
-    state.session.phaseName = "squeeze";
-    state.session.phaseRemaining = getPhaseDuration("squeeze");
-    triggerVibration(160);
-    triggerSqueezeSound();
-    return;
-  }
+  writeText(0, "RIFF");
+  view.setUint32(4, 36 + sampleCount, true);
+  writeText(8, "WAVE");
+  writeText(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, SESSION_AUDIO_SAMPLE_RATE, true);
+  view.setUint32(28, SESSION_AUDIO_SAMPLE_RATE, true);
+  view.setUint16(32, 1, true);
+  view.setUint16(34, 8, true);
+  writeText(36, "data");
+  view.setUint32(40, sampleCount, true);
+}
 
-  if (state.session.phaseName === "squeeze") {
-    state.session.phaseName = "rest";
-    state.session.phaseRemaining = state.settings.restDuration;
-    triggerVibration([80, 60, 80]);
-    return;
-  }
+function addTrackCue(samples, startSeconds, duration = 0.2) {
+  const startSample = Math.max(0, Math.floor(startSeconds * SESSION_AUDIO_SAMPLE_RATE));
+  const cueSamples = Math.floor(duration * SESSION_AUDIO_SAMPLE_RATE);
 
-  const block = getCurrentBlock();
-  if (state.session.repIndex >= block.repetitions) {
-    if (state.session.blockIndex >= state.session.blocks.length - 1) {
-      completeSession();
+  for (let index = 0; index < cueSamples && startSample + index < samples.length; index += 1) {
+    const time = index / SESSION_AUDIO_SAMPLE_RATE;
+    const attack = Math.min(1, index / (SESSION_AUDIO_SAMPLE_RATE * 0.008));
+    const release = Math.min(1, (cueSamples - index) / (SESSION_AUDIO_SAMPLE_RATE * 0.025));
+    const envelope = Math.min(attack, release);
+    const combined = Math.sin(2 * Math.PI * 880 * time) + 0.65 * Math.sin(2 * Math.PI * 1320 * time);
+    const sample = Math.tanh(combined * 1.8) * envelope;
+    samples[startSample + index] = Math.max(1, Math.min(255, 128 + Math.round(sample * 122)));
+  }
+}
+
+function createSessionAudioBlob(session) {
+  const sampleCount = Math.ceil(session.timeline.duration * SESSION_AUDIO_SAMPLE_RATE);
+  const buffer = new ArrayBuffer(44 + sampleCount);
+  const view = new DataView(buffer);
+  const samples = new Uint8Array(buffer, 44);
+  samples.fill(128);
+  writeWaveHeader(view, sampleCount);
+
+  addTrackCue(samples, 0.08, 0.28);
+  session.timeline.segments.forEach((segment) => {
+    if (segment.phaseName !== "squeeze") {
       return;
     }
 
-    state.session.blockIndex += 1;
-    state.session.repIndex = 1;
-    state.session.phaseName = "squeeze";
-    state.session.phaseRemaining = getPhaseDuration("squeeze");
-    triggerVibration(160);
-    triggerSqueezeSound();
+    const duration = segment.end - segment.start;
+    for (let second = 0; second < duration; second += 1) {
+      addTrackCue(samples, segment.start + second + 0.03);
+    }
+  });
+
+  return new Blob([buffer], { type: "audio/wav" });
+}
+
+function getSessionAudioVolume() {
+  return Math.max(0, Math.min(1, getSoundVolume() / 8));
+}
+
+function updateSessionAudioVolume() {
+  if (sessionAudio) {
+    sessionAudio.volume = getSessionAudioVolume();
+  }
+}
+
+function updateMediaSessionState(playbackState = "none") {
+  if (!("mediaSession" in navigator)) {
     return;
   }
 
-  state.session.repIndex += 1;
-  state.session.phaseName = "squeeze";
-  state.session.phaseRemaining = getPhaseDuration("squeeze");
-  triggerVibration(160);
-  triggerSqueezeSound();
+  navigator.mediaSession.playbackState = playbackState;
+}
+
+function clearSessionAudio() {
+  if (state.session) {
+    state.session.usesMediaAudio = false;
+  }
+
+  if (sessionAudio) {
+    sessionAudio.pause();
+    sessionAudio.removeAttribute("src");
+    sessionAudio.load();
+    sessionAudio.remove();
+    sessionAudio = null;
+  }
+
+  if (sessionAudioUrl) {
+    URL.revokeObjectURL(sessionAudioUrl);
+    sessionAudioUrl = null;
+  }
+
+  updateMediaSessionState();
+}
+
+function configureMediaSession() {
+  if (!("mediaSession" in navigator)) {
+    return;
+  }
+
+  if ("MediaMetadata" in window) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: "Pågående knippass",
+      artist: "Knip",
+      album: "Träningspass"
+    });
+  }
+
+  try {
+    navigator.mediaSession.setActionHandler("pause", () => setSessionPaused(true));
+    navigator.mediaSession.setActionHandler("play", () => setSessionPaused(false));
+  } catch {
+    // Äldre Safari-versioner kan ha Media Session utan alla action handlers.
+  }
+}
+
+function playSessionAudioElement(session, playFallbackCue = false) {
+  const playPromise = sessionAudio.play();
+  if (!playPromise) {
+    updateMediaSessionState("playing");
+    return;
+  }
+
+  playPromise.then(() => updateMediaSessionState("playing")).catch(() => {
+    if (state.session !== session) {
+      return;
+    }
+    session.usesMediaAudio = false;
+    session.lastClockTime = performance.now();
+    clearSessionAudio();
+    if (playFallbackCue) {
+      triggerSound("start");
+    }
+  });
+}
+
+function startSessionAudio() {
+  const session = state.session;
+  if (!session || session.paused || !state.settings.soundEnabled) {
+    return;
+  }
+
+  clearSessionAudio();
+  sessionAudioUrl = URL.createObjectURL(createSessionAudioBlob(session));
+  sessionAudio = document.createElement("audio");
+  sessionAudio.hidden = true;
+  sessionAudio.preload = "auto";
+  sessionAudio.setAttribute("playsinline", "");
+  sessionAudio.src = sessionAudioUrl;
+  sessionAudio.volume = getSessionAudioVolume();
+  document.body.append(sessionAudio);
+  try {
+    sessionAudio.currentTime = Math.min(session.elapsedSeconds, session.timeline.duration);
+  } catch {
+    const audio = sessionAudio;
+    audio.addEventListener("loadedmetadata", () => {
+      if (sessionAudio === audio) {
+        audio.currentTime = Math.min(session.elapsedSeconds, session.timeline.duration);
+      }
+    }, { once: true });
+  }
+  session.usesMediaAudio = true;
+  configureMediaSession();
+
+  sessionAudio.addEventListener("ended", () => {
+    if (state.session === session && !session.paused) {
+      session.elapsedSeconds = session.timeline.duration;
+      syncSessionProgress();
+    }
+  });
+  sessionAudio.addEventListener("pause", () => {
+    if (state.session !== session || !session.usesMediaAudio || session.paused || sessionAudio?.ended) {
+      return;
+    }
+
+    session.elapsedSeconds = sessionAudio.currentTime;
+    session.paused = true;
+    updateMediaSessionState("paused");
+    updateSessionUI();
+  });
+
+  playSessionAudioElement(session, session.elapsedSeconds === 0);
+}
+
+function syncSessionClock() {
+  const session = state.session;
+  if (!session || session.paused) {
+    return;
+  }
+
+  const now = performance.now();
+  if (session.usesMediaAudio && sessionAudio) {
+    session.elapsedSeconds = sessionAudio.currentTime;
+  } else {
+    session.elapsedSeconds += Math.max(0, now - session.lastClockTime) / 1000;
+  }
+  session.lastClockTime = now;
+}
+
+function syncSessionProgress() {
+  const session = state.session;
+  if (!session) {
+    return;
+  }
+
+  syncSessionClock();
+  if (session.elapsedSeconds >= session.timeline.duration) {
+    completeSession();
+    return;
+  }
+
+  const timelineIndex = session.timeline.segments.findIndex((segment) => session.elapsedSeconds < segment.end);
+  const segment = session.timeline.segments[Math.max(0, timelineIndex)];
+  const previousTimelineIndex = session.timelineIndex;
+  const previousRemaining = session.phaseRemaining;
+
+  session.timelineIndex = Math.max(0, timelineIndex);
+  session.blockIndex = segment.blockIndex;
+  session.repIndex = segment.repIndex;
+  session.phaseName = segment.phaseName;
+  session.phaseRemaining = Math.max(1, Math.ceil(segment.end - session.elapsedSeconds));
+
+  if (!session.usesMediaAudio && state.settings.soundEnabled && segment.phaseName === "squeeze") {
+    const cueSecond = Math.floor(session.elapsedSeconds - segment.start);
+    const cueKey = `${session.timelineIndex}:${cueSecond}`;
+    if (session.fallbackCueKey !== cueKey) {
+      session.fallbackCueKey = cueKey;
+      triggerSqueezeSound();
+    }
+  } else {
+    session.fallbackCueKey = null;
+  }
+
+  if (session.timelineIndex !== previousTimelineIndex) {
+    if (segment.phaseName === "squeeze") {
+      triggerVibration(160);
+    } else if (segment.phaseName === "rest") {
+      triggerVibration([80, 60, 80]);
+    }
+  }
+
+  if (session.timelineIndex !== previousTimelineIndex || session.phaseRemaining !== previousRemaining) {
+    updateSessionUI();
+  }
 }
 
 function tick() {
@@ -960,32 +1205,57 @@ function tick() {
     return;
   }
 
-  if (state.session.phaseRemaining > 1) {
-    state.session.phaseRemaining -= 1;
-    updateSessionUI();
-    if (state.session.phaseName === "squeeze") {
-      triggerSqueezeSound();
-    }
+  syncSessionProgress();
+}
+
+function setSessionPaused(paused) {
+  const session = state.session;
+  if (!session || session.paused === paused) {
     return;
   }
 
-  advancePhase();
+  if (paused) {
+    syncSessionProgress();
+    if (!state.session) {
+      return;
+    }
+    session.paused = true;
+    if (sessionAudio) {
+      sessionAudio.pause();
+    }
+    updateMediaSessionState("paused");
+  } else {
+    session.paused = false;
+    session.lastClockTime = performance.now();
+    if (state.settings.soundEnabled) {
+      if (sessionAudio) {
+        session.usesMediaAudio = true;
+        playSessionAudioElement(session);
+      } else {
+        startSessionAudio();
+      }
+    }
+  }
+
   updateSessionUI();
 }
 
 function startSession() {
   clearInterval(tickTimer);
-  getAudioContext();
+  clearSessionAudio();
   state.session = buildSession();
   showView("session");
   updateSessionUI();
-  triggerSound("start");
-  tickTimer = window.setInterval(tick, 1000);
+  if (state.settings.soundEnabled) {
+    startSessionAudio();
+  }
+  tickTimer = window.setInterval(tick, 250);
 }
 
 function stopSession() {
   clearInterval(tickTimer);
   tickTimer = null;
+  clearSessionAudio();
   state.session = null;
 }
 
@@ -1132,15 +1402,25 @@ elements.pauseButton.addEventListener("click", () => {
     return;
   }
 
-  state.session.paused = !state.session.paused;
-  updateSessionUI();
+  setSessionPaused(!state.session.paused);
 });
 elements.cancelButton.addEventListener("click", cancelSession);
 elements.sessionSoundButton.addEventListener("click", () => {
-  setSoundEnabled(!state.settings.soundEnabled);
+  if (state.session && !state.session.paused) {
+    syncSessionProgress();
+  }
 
-  if (state.settings.soundEnabled && state.session?.phaseName === "squeeze") {
-    triggerSqueezeSound();
+  setSoundEnabled(!state.settings.soundEnabled);
+  if (!state.session) {
+    return;
+  }
+
+  state.session.lastClockTime = performance.now();
+  if (state.settings.soundEnabled && !state.session.paused) {
+    startSessionAudio();
+  } else {
+    state.session.usesMediaAudio = false;
+    clearSessionAudio();
   }
 });
 elements.sessionSoundVolume.addEventListener("input", () => {
@@ -1216,6 +1496,18 @@ elements.settingsForm.addEventListener("submit", (event) => {
   updateHomeSummary();
   renderStats();
   showView("home");
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && state.session && !state.session.paused) {
+    syncSessionProgress();
+  }
+});
+
+window.addEventListener("pageshow", () => {
+  if (state.session && !state.session.paused) {
+    syncSessionProgress();
+  }
 });
 
 updateHomeSummary();

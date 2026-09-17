@@ -1,4 +1,4 @@
-const CACHE_NAME = "knip-cache-v15";
+const CACHE_NAME = "knip-cache-v19";
 const APP_FILES = [
   "./",
   "index.html",

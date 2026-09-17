@@ -1,5 +1,5 @@
 # Lokal träningsdata och progression
-Status: produktspecifikation, ännu inte implementerad.
+Status: grundfunktionerna för lokal historik, JSON-export och progression är implementerade i `app.js` och avstämda mot koden 2026-09-17. Användaren har samma dag bekräftat att export fungerar på iPhone. Skydd mot skadad eller otillgänglig lokal lagring återstår att förbättra; se `todo.md`. Acceptanskriterierna nedan är krav, inte ett påstående om att alla kantfall är verifierade.
 
 ## Mål
 

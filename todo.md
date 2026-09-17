@@ -1,28 +1,37 @@
 # Todo för Knip
 
-Den här listan är vår startpunkt för fortsatt utveckling. Vi börjar med att fatta produktbesluten och rör därefter koden.
+Den här listan är vår startpunkt för fortsatt utveckling. Genomgången 2026-09-17 stämmer av punkterna mot aktuell kod och produktunderlag. Avbockat betyder implementerat eller dokumenterat enligt punkten; fysisk iPhone-verifiering redovisas separat. Förbättringsförslagen längst ned är förslag, inte nya produktbeslut.
 
 ## Innan vi börjar koda
 
 - [ ] Sammanställ exakt innehåll för `Avancerad 1-6` från referensbilderna.
 - [ ] Märk varje pass som `kort`, `normal` eller `lång`.
-- [ ] Bestäm vilka långa pass användaren får hoppa över.
-- [ ] Fastställ progressionen genom `Övning 1-6` och vidare till avancerade repetitionspass.
-- [ ] Bestäm om nivåbyte kräver antal dagar, antal genomförda pass eller båda.
-- [ ] Fastställ den mjuka övergången:
-  - dag 1: `1 nytt + 2 gamla pass`
-  - dag 2: `2 nya + 1 gammalt pass`
-  - dag 3: `bara nya pass`
-- [ ] Bestäm vad som händer efter missade dagar eller ett längre uppehåll.
-- [ ] Skissa flöden för första start, dagens pass, nivåbyte och avslutat pass.
-- [ ] Bestäm ljudsignaler för `start`, `knip`, `vila`, byte av kniptyp och avslutat pass.
-- [ ] Bestäm om användaren kan välja ljud, volym och tyst läge.
+- [x] Bestäm regler för att hoppa över grundprogrammets nivåer: alla utom sista tillgängliga nivån kan hoppas över och senare återaktiveras.
+- [ ] Bestäm vilka avancerade långa pass användaren får hoppa över.
+- [x] Fastställ progressionen genom `Övning 1-6`.
+- [ ] Fastställ fortsättningen från `Övning 6` till avancerade repetitionspass.
+- [x] Bestäm om nivåbyte kräver antal dagar, antal genomförda pass eller båda: minst ett komplett pass per lokal kalenderdag under tre dagar i rad, följt av ett frivilligt nivåbyte.
+- [x] Fastställ den mjuka övergången som tre passdelar i ett sammanhängande träningspass:
+  - dag 1: `1 ny + 2 gamla passdelar`
+  - dag 2: `2 nya + 1 gammal passdel`
+  - dag 3: `3 nya passdelar`
+- [x] Bestäm vad som händer efter missade dagar eller ett längre uppehåll: kvalificeringsföljden bryts, påbörjad övergång pausas och aktiv nivå behålls.
+- [x] Bygg grundflöden för start, dagens pass, nivåbyte och avslutat pass.
+- [ ] Komplettera första starten med en kort introduktion till träningen och progressionen.
+- [x] Bestäm grundljud: startsignal, ett ljud per knipsekund, tyst vila och avslutssignal.
+- [ ] Ta ställning till särskild ljudsignal vid byte av kniptyp; samma knipsignal används för alla typer idag.
+- [x] Lägg till ljud på/av, volym och tyst läge.
+- [ ] Ta ställning till valbara ljud; idag finns en fast ljuduppsättning.
 - [ ] Definiera påminnelser, tider och snoozeval.
 - [ ] Kontrollera vad iPhone-PWA stödjer för notiser och snooze.
-- [ ] Välj första versionens gamification: progression, streak, veckomål och nivåbelöningar.
-- [ ] Bestäm vilken historik och dagsstatus som ska visas.
-- [ ] Skriv korta instruktioner för varje kniptyp och nödvändig säkerhetsinformation.
-- [ ] Ange acceptanskriterier för den första versionen.
+- [x] Inför grundläggande progression och en följd av kvalificerande träningsdagar per nivå.
+- [ ] Välj om veckomål och nivåbelöningar ska ingå i första versionen.
+- [x] Visa grundstatistik: totalt genomförda pass, senaste sju dagarna och senaste passet samt aktiv nivå och kvalificeringsföljd på startsidan.
+- [ ] Bestäm utökad historik och dagsstatus, exempelvis dagens genomförda pass i förhållande till rekommendationen.
+- [x] Skriv korta instruktioner för de fyra kniptyperna och kroppsläge per nivå.
+- [ ] Komplettera med nödvändig säkerhetsinformation och råd om andning och avslappning.
+- [x] Ange acceptanskriterier för lokal träningsdata och progression i separat specifikation.
+- [ ] Ange samlade acceptanskriterier för första versionen, inklusive iPhone, offline, ljud och tillgänglighet.
 
 ## Första implementationen
 
@@ -34,15 +43,18 @@ Den här listan är vår startpunkt för fortsatt utveckling. Vi börjar med att
 - [ ] Lägg till val för kortare pass och möjlighet att hoppa över långa pass.
 - [x] Bygg avslutsskärm med passammanfattning och progression.
 - [ ] Lägg till snoozbara påminnelser utifrån verifierat plattformsstöd.
-- [ ] Lägg till den valda första nivån av gamification.
+- [x] Lägg till grundläggande motivationsstöd genom nivåprogression och kvalificeringsföljd.
+- [ ] Implementera eventuella veckomål och nivåbelöningar efter produktbeslut.
 - [ ] Testa hela flödet på mobil och som installerad PWA.
 
 ## Åtgärder efter webbläsartest 2026-09-17
 
 - [x] Höj `CACHE_NAME` i `service-worker.js` från `knip-cache-v8` till nästa version så att aktuell `index.html`, `app.js` och övriga statiska filer installeras som en sammanhängande cache.
 - [x] Verifiera uppdateringsflödet på rotadressen utan cachebrytande frågeparameter och kontrollera att inga JavaScriptfel uppstår vid ljudkontrollerna.
-- [ ] Testa hörbara ljudsignaler och vibrationsfeedback på en fysisk iPhone.
-- [ ] Testa installation på hemskärmen, start i fristående PWA-läge och offline-start på en fysisk iPhone.
+- [x] Testa ljud tillsammans med podcast på fysisk iPhone: användaren rapporterar att ljudet fortfarande är för lågt, se ljudåtgärder nedan.
+- [ ] Testa vibrationsfeedback på en fysisk iPhone.
+- [x] Bekräfta offline-funktion på fysisk iPhone enligt användarens test.
+- [ ] Bekräfta installation på hemskärmen, start i fristående PWA-läge och kallstart utan nät på en fysisk iPhone; dessa detaljer framgår inte av offline-rapporten.
 - [x] Spela ett kort ljud varje sekund under knip och håll viloperioden tyst.
 - [x] Låt ljudet slås på och av direkt under ett pågående pass.
 - [x] Ge progressindikatorn mer avstånd till passkontrollerna och använd hela skärmbredden på telefon.
@@ -93,9 +105,14 @@ Verifierat 2026-09-17 i isolerad lokal Chrome (headless) med 390 × 844 px mobil
 ## Ljud och skärmlås
 
 - [x] Lägg till en sparad volymkontroll i inställningarna och under pågående pass.
-- [x] Låt ljudet förstärkas upp till 800 procent, cirka +18 dB, för en tydligt hörbar relativ mix mot podd eller musik.
+- [x] Lägg till förstärkning upp till 800 procent, cirka +18 dB i signalamplitud. Detta har inte gett tillräcklig hörbarhet mot podcast enligt användarens iPhone-test.
 - [x] Låt `Testa ljudet` aktivera och spara ljudet så att testknappen och träningspasset inte kan ha olika ljudläge.
-- [ ] Utred ett sammanhängande ljudspår som utvecklingsmöjlighet för bakgrundsuppspelning med låst skärm. Testa på fysisk iPhone om ljudspåret fortsätter och hur Knip blandas med podd eller musik; nuvarande JavaScript-timer och Web Audio kan pausas när skärmen låses.
+- [x] Implementera ett sammanhängande, lokalt genererat WAV-spår för hela passet som avgränsad kandidat för bakgrundsuppspelning. Spåret innehåller startsignal och tydligare flertonsignaler varje knipsekund, medan vilan är tyst. När ljud är på styr spårets uppspelningstid timer och passprogression.
+- [x] Synkronisera paus, fortsätt, ljud på/av och återgång till appen mot passets gemensamma tidslinje. När ljud är av räknar en monoton klocka ikapp efter att JavaScript varit pausat i bakgrunden.
+- [ ] Förbättra ljudets hörbarhet tillsammans med podcast på iPhone och verifiera resultatet i samma lyssningssituation.
+- [ ] Åtgärda att ljudet upphör vid skärmlås och verifiera att ljud, passprogression och paus/fortsätt håller ihop efter upplåsning.
+
+Användarrapport från fysisk iPhone 2026-09-17: ljudet är fortfarande lågt i förhållande till podcast och upphör vid skärmlås. Offline och export fungerar. Rapporten anger inte volyminställning, iOS-version eller om testet kördes i Safari eller som installerad PWA. Problemen med ljud är därmed observerade på enheten; orsaken och en fungerande lösning återstår att verifiera.
 
 Verifierat 2026-09-17 i isolerad lokal Chrome med mobilvy: volymen skalade ljudets faktiska förstärkning, ändringar till 35 och 65 procent synkroniserades mellan inställningar och passvy och sparades i localStorage. Cache v11 installerades och inga JavaScriptundantag eller konsolfel uppstod.
 
@@ -105,6 +122,28 @@ Verifierat 2026-09-17 i isolerad lokal Chrome med mobilvy: maxnivån 800 procent
 
 Verifierat 2026-09-17 i isolerad lokal Chrome: `Testa och slå på ljud` ändrade det sparade ljudläget från av till på. Det efterföljande passet skapade startsignal och signaler under knip. Cache v14 installerades utan JavaScriptundantag eller konsolfel.
 
+Verifierat 2026-09-17 i lokal Chromium-webbläsare: ett pass skapade en enda Blob-baserad WAV-källa, timer och fas gick framåt med ljudspåret, paus höll sekundtalet stilla och fortsätt återupptog progressionen. Ljud av tog bort mediespåret utan att stoppa timern och ljud på kunde starta ett nytt spår vid aktuell passposition. Cache v19 laddades med den färdiga ändringen och inga JavaScriptvarningar eller fel registrerades. Hörbarhet mot podcast, fortsatt uppspelning vid skärmlås och iOS styrning av andra appars ljud kan inte verifieras lokalt.
+
+Webbplattformen kan inte välja iOS-ljudsessionens mixningsläge. Det sammanhängande mediespåret ger Safari och en installerad PWA bästa praktiska möjlighet att fortsätta vid skärmlås, men iOS kan fortfarande pausa en podcast när Knip startar eller pausa Knip när en annan app tar ljudfokus. Om samtidig uppspelning och skärmlås inte fungerar på den fysiska enheten kräver säker kontroll över detta en native-app med `AVAudioSession`, bakgrundsljud och uttryckligt mixnings- eller duckningsläge.
+
 ## Låg prioritet
 
-- [ ] Verifiera att `Exportera historik` laddar ned en giltig JSON-fil med `schemaVersion`, programdata och träningsposter, och komplettera senare med återställning av träningshistorik.
+- [x] Verifiera att exportfunktionen skapar giltig JSON med `schemaVersion`, exporttid, tidszon, programdata och träningsposter i ett isolerat JavaScript-test.
+- [x] Bekräfta att historikexporten fungerar på iPhone enligt användarens test. Separat öppning och innehållskontroll av den exporterade filen på enheten är inte rapporterad.
+- [ ] Komplettera senare med återställning av träningshistorik.
+
+## Förbättringsförslag efter projektgenomgång 2026-09-17
+
+Förbättringsförslag; punkterna är inte implementerade eller beslutade. Efter användarens iPhone-test prioriteras ljudproblemen först enligt rekommendationen nedan.
+
+1. **Gör lokal lagring robust.** Validera inlästa historikposter och tidsinställningar, hantera fel från `localStorage` och visa om ett pass inte kunde sparas. Isolerade tester bekräftar att en `null`-post i historiken orsakar undantag och att negativa eller icke-numeriska sparade tider släpps igenom. Bevara giltig historik vid fel.
+2. **Slutför iPhone-verifieringen av ljudspåret.** Användaren har bekräftat offline och export. Den lokala prototypen använder nu ett sammanhängande mediespår som gemensam tidskälla när ljud är på och räknar ikapp mot en monoton klocka när ljud är av. Testa hörbarhet mot podcast, skärmlås, återgång till appen samt paus och fortsätt. Bekräfta även hemskärmsinstallation och kallstart utan nät.
+3. **Gör passets omfattning tydlig före start.** Visa beräknad tid från aktuella inställningar och förklara att övergången innehåller tre passdelar i en körning. Förtydliga skillnaden mellan rekommendationen tre pass per dag och kravet minst ett komplett pass per dag för progression. Steg 4–6 visar 1–2 veckor som föreslagen period medan kvalificeringskravet är tre dagar.
+4. **Uppdatera dagsstatus när appen åter blir synlig.** Startsida och programvy renderas vid start och vissa handlingar, men inte vid dygnsskifte eller återgång från bakgrunden. Kontrollera datumbyte så att gårdagens status inte ligger kvar.
+5. **Förbättra tillgängligheten.** Rätta startsidans `aria-labelledby`, som pekar på ett saknat `home-title`, hantera fokus vid vybyte och testa VoiceOver. Timerns sekundtal är idag en live-region medan fastexten ligger utanför; kontrollera att rätt information läses upp utan störande upprepning.
+6. **Gör avslutet tydligare.** Visa genomförd nivå, passdelar och aktuell progression. Nuvarande sammanfattning visar främst sparningstid och eventuellt slutfört nivåbyte. Se även över formuleringen `Färdig för idag` i förhållande till rekommendationen om flera pass per dag.
+7. **Avgränsa cachehanteringen.** Service workern tar idag bort alla cache-namn utom sitt eget vid aktivering. Begränsa rensningen till Knips cache och använd HTML-reservsvaret endast för sidnavigering, inte för misslyckade hämtningar av exempelvis skript eller bilder.
+
+**Rekommenderat nästa utvecklingssteg:** verifiera den sammanhängande ljudprototypen på fysisk iPhone innan lösningen betraktas som fungerande. Kontrollera särskilt samtidig podcast, skärmlås och att fasen är oförändrat synkroniserad efter paus och upplåsning. Därefter stabilitetsomgången för lokal lagring (punkt 1), före avancerade program och påminnelser.
+
+**Kontroller i denna genomgång:** JavaScript-syntax för `app.js` och `service-worker.js`, manifestets JSON och ikonreferenser samt isolerade Node-tester med simulerad DOM för sex nivåer, kvalificerande dagar, flera pass samma dag, avbrutet pass, ordningen i övergångens tre dagar, uppehåll under övergång och exportens JSON-innehåll. Detta är inte ett nytt webbläsar- eller iPhone-test; tidigare webbläsarresultat ovan är historiska verifieringar. Endast dokumentation ändrades.
