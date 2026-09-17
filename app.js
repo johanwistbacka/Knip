@@ -5,7 +5,7 @@ const STORAGE_KEYS = {
 };
 
 const HISTORY_SCHEMA_VERSION = 1;
-const PROGRAM_SCHEMA_VERSION = 1;
+const PROGRAM_SCHEMA_VERSION = 2;
 const QUALIFIED_DAYS_REQUIRED = 3;
 
 const DEFAULT_SETTINGS = {
@@ -210,6 +210,8 @@ function defaultProgram() {
   return {
     schemaVersion: PROGRAM_SCHEMA_VERSION,
     activeLevelId: EXERCISE_LEVELS[0].id,
+    levelStatuses: {},
+    events: [],
     transition: null
   };
 }
@@ -228,7 +230,13 @@ function getLevel(levelId) {
 
 function getNextLevel(levelId) {
   const currentIndex = EXERCISE_LEVELS.findIndex((level) => level.id === levelId);
-  return currentIndex >= 0 ? EXERCISE_LEVELS[currentIndex + 1] || null : null;
+  return currentIndex >= 0
+    ? EXERCISE_LEVELS.slice(currentIndex + 1).find((level) => !isLevelSkipped(level.id)) || null
+    : null;
+}
+
+function isLevelSkipped(levelId) {
+  return state.program.levelStatuses[levelId] === "skipped";
 }
 
 function loadProgram() {
@@ -245,15 +253,26 @@ function loadProgram() {
       return fallback;
     }
 
+    const levelStatuses = Object.fromEntries(
+      EXERCISE_LEVELS
+        .filter((level) => parsed.levelStatuses?.[level.id] === "skipped")
+        .map((level) => [level.id, "skipped"])
+    );
+    // An active level must remain available, including when loading older data.
+    delete levelStatuses[parsed.activeLevelId];
     const transition = parsed.transition;
     const hasValidTransition = transition
       && getLevel(transition.fromLevelId)
       && getLevel(transition.toLevelId)
+      && !levelStatuses[transition.fromLevelId]
+      && !levelStatuses[transition.toLevelId]
       && Array.isArray(transition.completedLocalDays);
 
     return {
       schemaVersion: PROGRAM_SCHEMA_VERSION,
       activeLevelId: parsed.activeLevelId,
+      levelStatuses,
+      events: Array.isArray(parsed.events) ? parsed.events : [],
       transition: hasValidTransition
         ? {
           id: transition.id || createId(),
@@ -359,11 +378,58 @@ function buildProgramBlocks(level, transitionDay) {
   });
 }
 
+function changeProgramLevel(type, fromLevelId, toLevelId) {
+  state.program.events.push({
+    type,
+    timestamp: new Date().toISOString(),
+    fromLevelId,
+    toLevelId
+  });
+  state.program.activeLevelId = toLevelId;
+  state.program.transition = null;
+  saveProgram();
+  renderProgram();
+  updateHomeSummary();
+  document.getElementById(toLevelId).querySelector("summary").focus();
+}
+
+function skipLevel(levelId) {
+  const level = getActiveSessionLevel();
+  const nextLevel = getNextLevel(levelId);
+  if (state.session || level.id !== levelId || !nextLevel) {
+    return;
+  }
+
+  const transitionText = state.program.transition ? " Den pågående övergången avbryts." : "";
+  if (!window.confirm(`Hoppa över ${level.title} och gå till ${nextLevel.title}? Steget räknas inte som genomfört och ger ingen träningsdag.${transitionText} Du kan återaktivera det senare.`)) {
+    return;
+  }
+
+  state.program.levelStatuses[levelId] = "skipped";
+  changeProgramLevel("level_skipped", levelId, nextLevel.id);
+}
+
+function reactivateLevel(levelId) {
+  const level = getLevel(levelId);
+  if (state.session || !level || !isLevelSkipped(levelId)) {
+    return;
+  }
+
+  const transitionText = state.program.transition ? " Den pågående övergången avbryts." : "";
+  if (!window.confirm(`Återaktivera ${level.title} och göra det till ditt aktiva steg?${transitionText} Din träningshistorik behålls.`)) {
+    return;
+  }
+
+  const previousLevelId = getActiveSessionLevel().id;
+  delete state.program.levelStatuses[levelId];
+  changeProgramLevel("level_reactivated", previousLevelId, levelId);
+}
+
 function startTransition(levelId) {
   const level = getLevel(levelId);
   const nextLevel = getNextLevel(levelId);
 
-  if (!level || !nextLevel || state.program.activeLevelId !== levelId || !isLevelReadyToAdvance(level)) {
+  if (state.session || state.program.transition || !level || !nextLevel || isLevelSkipped(levelId) || state.program.activeLevelId !== levelId || !isLevelReadyToAdvance(level)) {
     return;
   }
 
@@ -527,7 +593,7 @@ function renderProgram() {
 
     const title = document.createElement("span");
     title.className = "program-level-title";
-    title.textContent = level.title;
+    title.textContent = isLevelSkipped(level.id) ? `${level.title} · Överhoppad` : level.title;
 
     const preview = document.createElement("span");
     preview.className = "program-level-preview";
@@ -608,6 +674,31 @@ function renderProgram() {
         action.dataset.action = "start-session";
       }
 
+      controls.append(status, action);
+      if (getNextLevel(level.id)) {
+        const skipButton = document.createElement("button");
+        skipButton.type = "button";
+        skipButton.className = "secondary-button";
+        skipButton.textContent = "Hoppa över nivå";
+        skipButton.dataset.action = "skip-level";
+        skipButton.dataset.levelId = level.id;
+        controls.append(skipButton);
+      }
+      content.append(controls);
+    }
+
+    if (isLevelSkipped(level.id)) {
+      const controls = document.createElement("div");
+      controls.className = "program-controls";
+      const status = document.createElement("p");
+      status.className = "program-status";
+      status.textContent = "Det här steget är överhoppat och räknas inte som genomfört.";
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "secondary-button";
+      action.textContent = `Återaktivera ${level.title}`;
+      action.dataset.action = "reactivate-level";
+      action.dataset.levelId = level.id;
       controls.append(status, action);
       content.append(controls);
     }
@@ -1087,6 +1178,16 @@ elements.settingsSoundVolume.addEventListener("input", () => {
 elements.programLevels.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) {
+    return;
+  }
+
+  if (button.dataset.action === "skip-level") {
+    skipLevel(button.dataset.levelId);
+    return;
+  }
+
+  if (button.dataset.action === "reactivate-level") {
+    reactivateLevel(button.dataset.levelId);
     return;
   }
 

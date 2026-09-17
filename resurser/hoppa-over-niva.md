@@ -13,7 +13,8 @@ Användaren ska kunna lämna en nivå som inte passar och fortsätta programmet 
 - Använd inte den överhoppade nivån som gammal övning i en mjuk övergång.
 - Om ett nivåhopp görs under en pågående övergång avbryts övergången och programmet går vidare till nästa tillgängliga nivå.
 - Dölj eller inaktivera åtgärden på den sista nivån när det inte finns någon senare nivå att gå till.
-- Gör det möjligt att återaktivera en överhoppad nivå senare.
+- Gör det möjligt att återaktivera en överhoppad nivå senare. Efter bekräftelse blir den återaktiverade nivån aktiv direkt och en eventuell övergång avbryts. Befintlig träningshistorik behålls.
+- Under en övergång gäller nivåhoppet den nya nivån som visas som aktiv i programvyn.
 
 ## Lagring
 
@@ -23,12 +24,14 @@ Spara nivåhoppet som en separat programhändelse, inte som ett träningspass. H
 {
   type: "level_skipped",
   timestamp: "ISO-8601",
-  fromLevelId: "level-2",
-  toLevelId: "level-3"
+  fromLevelId: "exercise-2",
+  toLevelId: "exercise-3"
 }
 ```
 
-Vid återaktivering sparas motsvarande händelse med typen `level_reactivated`.
+Vid återaktivering sparas motsvarande händelse med typen `level_reactivated`: `fromLevelId` är tidigare aktiv nivå och `toLevelId` är nivån som återaktiveras.
+
+Programdata använder `schemaVersion: 2`, med överhoppade nivåer i `levelStatuses` och separata programhändelser i `events`. Båda följer med i historikexportens `program`. Äldre programdata läses in med tomma status- och händelsefält; befintlig aktiv nivå, övergång och träningshistorik behålls.
 
 ## Förhållande till progression
 

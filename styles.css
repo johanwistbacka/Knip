@@ -336,6 +336,8 @@ h2 {
 }
 
 .program-controls {
+  display: grid;
+  gap: 12px;
   margin-top: 16px;
 }
 

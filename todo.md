@@ -79,14 +79,16 @@ Se [specifikationen för lokal träningsdata och progression](resurser/lokal-tra
 
 # Hoppa över nivå
 
-- [ ] Lägg till åtgärden `Hoppa över nivå` i programvyn med bekräftelse.
-- [ ] Markera nivån som `skipped`; räkna den inte som genomförd och ge ingen träningsdag eller svit.
-- [ ] Gå vidare till nästa tillgängliga nivå och hoppa över redan överhoppade nivåer.
-- [ ] Använd inte en överhoppad nivå som gammal övning i en mjuk övergång.
-- [ ] Avbryt en pågående övergång om användaren hoppar över nivån.
-- [ ] Spara nivåhopp och återaktivering som separata programhändelser.
-- [ ] Låt användaren återaktivera en överhoppad nivå senare.
-- [ ] Dölj eller inaktivera nivåhopp på sista nivån när ingen senare nivå finns.
+- [x] Lägg till åtgärden `Hoppa över nivå` i programvyn med bekräftelse.
+- [x] Markera nivån som `skipped`; räkna den inte som genomförd och ge ingen träningsdag eller svit.
+- [x] Gå vidare till nästa tillgängliga nivå och hoppa över redan överhoppade nivåer.
+- [x] Använd inte en överhoppad nivå som gammal övning i en mjuk övergång.
+- [x] Avbryt en pågående övergång om användaren hoppar över nivån.
+- [x] Spara nivåhopp och återaktivering som separata programhändelser.
+- [x] Låt användaren återaktivera en överhoppad nivå senare.
+- [x] Dölj eller inaktivera nivåhopp på sista nivån när ingen senare nivå finns.
+
+Verifierat 2026-09-17 i isolerad lokal Chrome (headless) med 390 × 844 px mobilvy: bekräftelse och avbruten bekräftelse för nivåhopp och återaktivering, flera överhoppade nivåer, avbruten övergång, övergång utan överhoppade övningsblock, spärr på sista nivån, oförändrad träningshistorik samt sparning efter omladdning. Äldre programdata (schema 1) lästes in med bibehållen övergång. Fokus flyttades till det aktiva steget; snabbstart, paus, fortsätt och avbryt fungerade. Cache v15 och offline-omladdning verifierades utan JavaScriptundantag eller konsolfel. Fysisk iPhone är inte verifierad.
 
 ## Ljud och skärmlås
 
