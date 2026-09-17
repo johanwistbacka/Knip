@@ -139,6 +139,7 @@ const elements = {
   timerValue: document.getElementById("timer-value"),
   phaseBarFill: document.getElementById("phase-bar-fill"),
   repCounter: document.getElementById("rep-counter"),
+  sessionSoundButton: document.getElementById("session-sound-button"),
   completeSummary: document.getElementById("complete-summary"),
   homeTotalSessions: document.getElementById("home-total-sessions"),
   homeProgramSummary: document.getElementById("home-program-summary"),
@@ -691,24 +692,11 @@ function triggerSound(cue, force = false) {
       { frequency: 554, offset: 0.12, duration: 0.1 },
       { frequency: 659, offset: 0.24, duration: 0.16 }
     ],
-    rest: [
-      { frequency: 440, duration: 0.12, volume: 0.09 },
-      { frequency: 330, offset: 0.14, duration: 0.18, volume: 0.09 }
-    ],
+    squeezeTick: [{ frequency: 554, duration: 0.08, volume: 0.1 }],
     complete: [
       { frequency: 523, duration: 0.16 },
       { frequency: 659, offset: 0.12, duration: 0.16 },
       { frequency: 784, offset: 0.24, duration: 0.3 }
-    ],
-    find: [{ frequency: 440, duration: 0.2, volume: 0.09 }],
-    strength: [{ frequency: 554, duration: 0.24 }],
-    endurance: [
-      { frequency: 392, duration: 0.16 },
-      { frequency: 523, offset: 0.18, duration: 0.28 }
-    ],
-    quick: [
-      { frequency: 784, duration: 0.08 },
-      { frequency: 784, offset: 0.11, duration: 0.08 }
     ]
   };
 
@@ -716,7 +704,13 @@ function triggerSound(cue, force = false) {
 }
 
 function triggerSqueezeSound() {
-  triggerSound(getCurrentBlock()?.type || "strength");
+  triggerSound("squeezeTick");
+}
+
+function updateSessionSoundControl() {
+  const soundEnabled = Boolean(state.settings.soundEnabled);
+  elements.sessionSoundButton.textContent = soundEnabled ? "Ljud på" : "Ljud av";
+  elements.sessionSoundButton.setAttribute("aria-pressed", String(soundEnabled));
 }
 
 function getPhaseDuration(phaseName) {
@@ -775,6 +769,7 @@ function updateSessionUI() {
   elements.repCounter.textContent = `${exercise.label} ${state.session.repIndex} av ${block.repetitions}${partText}`;
   elements.phaseBarFill.style.width = `${Math.max(0, Math.min(progress, 100))}%`;
   elements.pauseButton.textContent = state.session.paused ? "Fortsätt" : "Pausa";
+  updateSessionSoundControl();
 }
 
 function advancePhase() {
@@ -794,7 +789,6 @@ function advancePhase() {
     state.session.phaseName = "rest";
     state.session.phaseRemaining = state.settings.restDuration;
     triggerVibration([80, 60, 80]);
-    triggerSound("rest");
     return;
   }
 
@@ -829,6 +823,9 @@ function tick() {
   if (state.session.phaseRemaining > 1) {
     state.session.phaseRemaining -= 1;
     updateSessionUI();
+    if (state.session.phaseName === "squeeze") {
+      triggerSqueezeSound();
+    }
     return;
   }
 
@@ -998,6 +995,16 @@ elements.pauseButton.addEventListener("click", () => {
   updateSessionUI();
 });
 elements.cancelButton.addEventListener("click", cancelSession);
+elements.sessionSoundButton.addEventListener("click", () => {
+  state.settings.soundEnabled = !state.settings.soundEnabled;
+  saveSettings();
+  fillSettingsForm();
+  updateSessionSoundControl();
+
+  if (state.settings.soundEnabled && state.session?.phaseName === "squeeze") {
+    triggerSqueezeSound();
+  }
+});
 elements.navHomeButton.addEventListener("click", () => {
   if (state.session) {
     cancelSession();
@@ -1016,7 +1023,7 @@ elements.openSettingsButton.addEventListener("click", () => {
   showView("settings");
 });
 elements.closeSettingsButton.addEventListener("click", () => showView("home"));
-elements.previewSoundButton.addEventListener("click", () => triggerSound("start", true));
+elements.previewSoundButton.addEventListener("click", () => triggerSound("squeezeTick", true));
 
 elements.programLevels.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");

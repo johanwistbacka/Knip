@@ -41,11 +41,15 @@ Den här listan är vår startpunkt för fortsatt utveckling. Vi börjar med att
 
 - [x] Höj `CACHE_NAME` i `service-worker.js` från `knip-cache-v8` till nästa version så att aktuell `index.html`, `app.js` och övriga statiska filer installeras som en sammanhängande cache.
 - [x] Verifiera uppdateringsflödet på rotadressen utan cachebrytande frågeparameter och kontrollera att inga JavaScriptfel uppstår vid ljudkontrollerna.
-- [ ] Verifiera att `Exportera historik` laddar ned en giltig JSON-fil med `schemaVersion`, programdata och träningsposter.
 - [ ] Testa hörbara ljudsignaler och vibrationsfeedback på en fysisk iPhone.
 - [ ] Testa installation på hemskärmen, start i fristående PWA-läge och offline-start på en fysisk iPhone.
+- [x] Spela ett kort ljud varje sekund under knip och håll viloperioden tyst.
+- [x] Låt ljudet slås på och av direkt under ett pågående pass.
+- [x] Ge progressindikatorn mer avstånd till passkontrollerna och använd hela skärmbredden på telefon.
 
 Verifierat 2026-09-17 i isolerad lokal Chrome (headless): vanlig omladdning av `/` installerade v9 över v8 utan frågeparameter eller rensning av cache under uppdateringen. Efter aktivering och ytterligare vanlig omladdning matchade alla åtta cacheposter aktuella projektfiler, v8 var borttagen och localStorage var oförändrad. `Testa ljudet` fungerade med ljudvalet både på och av; ljudvalet sparades, pass var tysta med ljud av och skapade start- och fassignaler med ljud på. Paus, fortsätt, avbryt samt offline-omladdning och ljudtest fungerade utan JavaScriptundantag eller konsolfel. Ljudets hörbarhet och fysisk iPhone/PWA är inte verifierade här.
+
+Verifierat 2026-09-17 i isolerad lokal Chrome med 390 × 844 px mobilvy: panelen använde hela skärmbredden utan yttre kortkant eller skugga och avståndet mellan progresslinjen och paus/fortsätt-knappen var 96 px. Ett ljud skapades för var och en av fem knipsekunder, inga ljud skapades under fem sekunders vila och ljud gick att slå av och på under både knip och vila. Inställningen sparades och testet gav inga JavaScriptundantag eller konsolfel. Cache v10 installerades. Hörbarhet på fysisk iPhone är inte verifierad här.
 
 ## Senare
 
@@ -53,7 +57,6 @@ Verifierat 2026-09-17 i isolerad lokal Chrome (headless): vanlig omladdning av `
 - [ ] Lägg till kalender eller veckovy.
 - [ ] Lägg till fler milstolpar och belöningar.
 - [ ] Anpassa påminnelser efter träningsvanor.
-- [ ] Lägg till export och återställning av träningshistorik.
 - [ ] Utvärdera fler program och personliga mål.
 
 ## Underlag
@@ -84,3 +87,7 @@ Se [specifikationen för lokal träningsdata och progression](resurser/lokal-tra
 - [ ] Spara nivåhopp och återaktivering som separata programhändelser.
 - [ ] Låt användaren återaktivera en överhoppad nivå senare.
 - [ ] Dölj eller inaktivera nivåhopp på sista nivån när ingen senare nivå finns.
+
+## Låg prioritet
+
+- [ ] Verifiera att `Exportera historik` laddar ned en giltig JSON-fil med `schemaVersion`, programdata och träningsposter, och komplettera senare med återställning av träningshistorik.

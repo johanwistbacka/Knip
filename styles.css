@@ -29,7 +29,7 @@ body {
 }
 
 body {
-  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
 }
 
 button,
@@ -43,13 +43,18 @@ button {
 }
 
 .app-shell {
-  max-width: 480px;
+  width: 100%;
+  max-width: 680px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 16px 0 32px;
+  padding: 12px 0 32px;
+}
+
+.topbar {
+  padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
 }
 
 .topbar,
@@ -121,12 +126,7 @@ h2 {
 }
 
 .panel {
-  background: var(--panel);
-  backdrop-filter: blur(22px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 24px;
+  padding: 20px max(20px, env(safe-area-inset-right)) 28px max(20px, env(safe-area-inset-left));
 }
 
 .view {
@@ -385,6 +385,27 @@ input:focus-visible {
   gap: 18px;
 }
 
+.sound-toggle-button {
+  display: block;
+  min-height: 44px;
+  margin: 24px auto 0;
+  padding: 10px 18px;
+  border: 1px solid rgba(91, 140, 130, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.sound-toggle-button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+.session-actions {
+  margin-top: 28px;
+}
+
 .phase-label {
   font-size: 1.8rem;
   font-weight: 700;
@@ -489,5 +510,28 @@ input:focus-visible {
   .home-grid,
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 640px) {
+  body {
+    padding-inline: 24px;
+  }
+
+  .app-shell {
+    padding-top: 20px;
+  }
+
+  .topbar {
+    padding-inline: 0;
+  }
+
+  .panel {
+    background: var(--panel);
+    backdrop-filter: blur(22px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px;
   }
 }
