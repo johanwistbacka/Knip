@@ -91,12 +91,14 @@ Se [specifikationen för lokal träningsdata och progression](resurser/lokal-tra
 ## Ljud och skärmlås
 
 - [x] Lägg till en sparad volymkontroll i inställningarna och under pågående pass.
-- [x] Låt ljudet förstärkas upp till 300 procent för en bättre relativ mix mot podd eller musik.
+- [x] Låt ljudet förstärkas upp till 800 procent, cirka +18 dB, för en tydligt hörbar relativ mix mot podd eller musik.
 - [ ] Utred ett sammanhängande ljudspår som utvecklingsmöjlighet för bakgrundsuppspelning med låst skärm. Testa på fysisk iPhone om ljudspåret fortsätter och hur Knip blandas med podd eller musik; nuvarande JavaScript-timer och Web Audio kan pausas när skärmen låses.
 
 Verifierat 2026-09-17 i isolerad lokal Chrome med mobilvy: volymen skalade ljudets faktiska förstärkning, ändringar till 35 och 65 procent synkroniserades mellan inställningar och passvy och sparades i localStorage. Cache v11 installerades och inga JavaScriptundantag eller konsolfel uppstod.
 
 Verifierat 2026-09-17 i isolerad lokal Chrome med mobilvy: 300 procent gav tre gånger grundförstärkningen och 240 procent synkroniserades mellan inställningar och passvy samt sparades i localStorage. Cache v12 installerades och inga JavaScriptundantag eller konsolfel uppstod. Mixning med podd eller musik är inte verifierad på fysisk iPhone.
+
+Verifierat 2026-09-17 i isolerad lokal Chrome med mobilvy: maxnivån 800 procent gav åtta gånger signalamplituden, cirka +18 dB, och 400 procent visades som +12 dB samt sparades och synkroniserades. Cache v13 installerades utan JavaScriptundantag eller konsolfel. Den hörbara skillnaden och mixningen med andra appar behöver fortfarande bekräftas på fysisk iPhone.
 
 ## Låg prioritet
 

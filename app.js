@@ -702,8 +702,8 @@ function triggerSound(cue, force = false) {
     squeezeTick: [{ frequency: 554, duration: 0.08, volume: 0.1 }],
     complete: [
       { frequency: 523, duration: 0.16 },
-      { frequency: 659, offset: 0.12, duration: 0.16 },
-      { frequency: 784, offset: 0.24, duration: 0.3 }
+      { frequency: 659, offset: 0.18, duration: 0.16 },
+      { frequency: 784, offset: 0.36, duration: 0.3 }
     ]
   };
 
@@ -716,19 +716,33 @@ function triggerSqueezeSound() {
 
 function getSoundVolume() {
   const volume = Number(state.settings.soundVolume);
-  return Number.isFinite(volume) ? Math.max(0, Math.min(3, volume)) : 1;
+  return Number.isFinite(volume) ? Math.max(0, Math.min(8, volume)) : 1;
+}
+
+function formatSoundVolume(percent) {
+  if (percent === 0) {
+    return "Tyst";
+  }
+
+  if (percent === 100) {
+    return "100 %";
+  }
+
+  const decibels = Math.round(20 * Math.log10(percent / 100));
+  return `${percent} % (${decibels > 0 ? "+" : ""}${decibels} dB)`;
 }
 
 function updateSoundVolumeControls() {
   const percent = Math.round(getSoundVolume() * 100);
   elements.sessionSoundVolume.value = String(percent);
   elements.settingsSoundVolume.value = String(percent);
-  elements.sessionVolumeOutput.textContent = `${percent} %`;
-  elements.settingsVolumeOutput.textContent = `${percent} %`;
+  const label = formatSoundVolume(percent);
+  elements.sessionVolumeOutput.textContent = label;
+  elements.settingsVolumeOutput.textContent = label;
 }
 
 function setSoundVolume(percent) {
-  state.settings.soundVolume = Math.max(0, Math.min(300, Number(percent) || 0)) / 100;
+  state.settings.soundVolume = Math.max(0, Math.min(800, Number(percent) || 0)) / 100;
   saveSettings();
   updateSoundVolumeControls();
 }
@@ -1083,7 +1097,7 @@ elements.settingsForm.addEventListener("submit", (event) => {
   state.settings.restDuration = Math.max(1, Number(elements.restDuration.value) || DEFAULT_SETTINGS.restDuration);
   state.settings.vibrationEnabled = elements.vibrationEnabled.checked;
   state.settings.soundEnabled = elements.soundEnabled.checked;
-  state.settings.soundVolume = Math.max(0, Math.min(300, Number(elements.settingsSoundVolume.value) || 0)) / 100;
+  state.settings.soundVolume = Math.max(0, Math.min(800, Number(elements.settingsSoundVolume.value) || 0)) / 100;
 
   saveSettings();
   updateHomeSummary();
