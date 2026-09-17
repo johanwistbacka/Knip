@@ -1,4 +1,4 @@
-const CACHE_NAME = "knip-cache-v20";
+const CACHE_NAME = "knip-cache-v21";
 const APP_FILES = [
   "./",
   "index.html",
@@ -32,6 +32,21 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
+    return;
+  }
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse.ok) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put("index.html", responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match("index.html").then((cachedResponse) => cachedResponse || Response.error()))
+    );
     return;
   }
 

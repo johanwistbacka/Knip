@@ -8,7 +8,7 @@ const HISTORY_SCHEMA_VERSION = 1;
 const PROGRAM_SCHEMA_VERSION = 2;
 const QUALIFIED_DAYS_REQUIRED = 3;
 const SESSION_AUDIO_SAMPLE_RATE = 8000;
-const APP_CACHE_VERSION = "v20";
+const APP_CACHE_VERSION = "v21";
 
 const DEFAULT_SETTINGS = {
   prepDuration: 5,
@@ -1387,6 +1387,16 @@ function exportHistory() {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
+    let reloadingForUpdate = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloadingForUpdate || state.session) {
+        return;
+      }
+
+      reloadingForUpdate = true;
+      window.location.reload();
+    });
+
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("service-worker.js").catch((error) => {
         console.error("Service worker registration failed:", error);
