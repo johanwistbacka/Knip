@@ -8,7 +8,7 @@ const HISTORY_SCHEMA_VERSION = 1;
 const PROGRAM_SCHEMA_VERSION = 2;
 const QUALIFIED_DAYS_REQUIRED = 3;
 const SESSION_AUDIO_SAMPLE_RATE = 8000;
-const APP_CACHE_VERSION = "v21";
+const APP_CACHE_VERSION = "v22";
 
 const DEFAULT_SETTINGS = {
   prepDuration: 5,
@@ -850,6 +850,8 @@ function setSoundVolume(percent) {
 
 function updateSessionSoundControl() {
   const soundEnabled = Boolean(state.settings.soundEnabled);
+  elements.sessionSoundVolume.closest(".volume-control").hidden = !soundEnabled;
+  elements.settingsSoundVolume.closest(".volume-control").hidden = !soundEnabled;
   elements.sessionSoundButton.textContent = soundEnabled ? "Ljud på" : "Ljud av";
   elements.sessionSoundButton.setAttribute("aria-pressed", String(soundEnabled));
   elements.previewSoundButton.textContent = soundEnabled ? "Testa ljudet" : "Testa och slå på ljud";

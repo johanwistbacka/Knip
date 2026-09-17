@@ -105,6 +105,7 @@ Verifierat 2026-09-17 i isolerad lokal Chrome (headless) med 390 × 844 px mobil
 ## Ljud och skärmlås
 
 - [x] Lägg till en sparad volymkontroll i inställningarna och under pågående pass.
+- [x] Dölj volymkontrollen i inställningarna och under pågående pass när ljudet är av.
 - [x] Lägg till förstärkning upp till 800 procent, cirka +18 dB i signalamplitud. Detta har inte gett tillräcklig hörbarhet mot podcast enligt användarens iPhone-test.
 - [x] Låt `Testa ljudet` aktivera och spara ljudet så att testknappen och träningspasset inte kan ha olika ljudläge.
 - [x] Implementera ett sammanhängande, lokalt genererat WAV-spår för hela passet som avgränsad kandidat för bakgrundsuppspelning. Spåret innehåller startsignal och tydligare flertonsignaler varje knipsekund, medan vilan är tyst. När ljud är på styr spårets uppspelningstid timer och passprogression.

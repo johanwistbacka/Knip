@@ -418,6 +418,10 @@ input:focus-visible {
   width: 100%;
 }
 
+.volume-control[hidden] {
+  display: none;
+}
+
 .session-volume-control {
   width: min(280px, 100%);
   color: var(--muted);
