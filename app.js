@@ -641,6 +641,7 @@ function fillSettingsForm() {
   elements.vibrationEnabled.checked = Boolean(state.settings.vibrationEnabled);
   elements.soundEnabled.checked = Boolean(state.settings.soundEnabled);
   updateSoundVolumeControls();
+  updateSessionSoundControl();
 }
 
 function triggerVibration(pattern = 120) {
@@ -751,6 +752,14 @@ function updateSessionSoundControl() {
   const soundEnabled = Boolean(state.settings.soundEnabled);
   elements.sessionSoundButton.textContent = soundEnabled ? "Ljud på" : "Ljud av";
   elements.sessionSoundButton.setAttribute("aria-pressed", String(soundEnabled));
+  elements.previewSoundButton.textContent = soundEnabled ? "Testa ljudet" : "Testa och slå på ljud";
+}
+
+function setSoundEnabled(soundEnabled) {
+  state.settings.soundEnabled = Boolean(soundEnabled);
+  elements.soundEnabled.checked = state.settings.soundEnabled;
+  saveSettings();
+  updateSessionSoundControl();
 }
 
 function getPhaseDuration(phaseName) {
@@ -1037,10 +1046,7 @@ elements.pauseButton.addEventListener("click", () => {
 });
 elements.cancelButton.addEventListener("click", cancelSession);
 elements.sessionSoundButton.addEventListener("click", () => {
-  state.settings.soundEnabled = !state.settings.soundEnabled;
-  saveSettings();
-  fillSettingsForm();
-  updateSessionSoundControl();
+  setSoundEnabled(!state.settings.soundEnabled);
 
   if (state.settings.soundEnabled && state.session?.phaseName === "squeeze") {
     triggerSqueezeSound();
@@ -1067,7 +1073,13 @@ elements.openSettingsButton.addEventListener("click", () => {
   showView("settings");
 });
 elements.closeSettingsButton.addEventListener("click", () => showView("home"));
-elements.previewSoundButton.addEventListener("click", () => triggerSound("squeezeTick", true));
+elements.soundEnabled.addEventListener("input", () => {
+  setSoundEnabled(elements.soundEnabled.checked);
+});
+elements.previewSoundButton.addEventListener("click", () => {
+  setSoundEnabled(true);
+  triggerSound("squeezeTick");
+});
 elements.settingsSoundVolume.addEventListener("input", () => {
   setSoundVolume(elements.settingsSoundVolume.value);
 });
