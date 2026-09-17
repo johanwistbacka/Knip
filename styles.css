@@ -385,16 +385,45 @@ input:focus-visible {
   gap: 18px;
 }
 
+.session-audio-controls {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
 .sound-toggle-button {
-  display: block;
   min-height: 44px;
-  margin: 24px auto 0;
   padding: 10px 18px;
   border: 1px solid rgba(91, 140, 130, 0.24);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.66);
   color: var(--accent-strong);
   font-weight: 700;
+}
+
+.volume-control {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.session-volume-control {
+  width: min(280px, 100%);
+  color: var(--muted);
+}
+
+.volume-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.volume-control input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
 }
 
 .sound-toggle-button[aria-pressed="true"] {

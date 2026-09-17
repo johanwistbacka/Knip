@@ -88,6 +88,13 @@ Se [specifikationen för lokal träningsdata och progression](resurser/lokal-tra
 - [ ] Låt användaren återaktivera en överhoppad nivå senare.
 - [ ] Dölj eller inaktivera nivåhopp på sista nivån när ingen senare nivå finns.
 
+## Ljud och skärmlås
+
+- [x] Lägg till en sparad volymkontroll i inställningarna och under pågående pass.
+- [ ] Utred och testa ett separat ljudspår för bakgrundsuppspelning på fysisk iPhone; nuvarande JavaScript-timer och Web Audio kan pausas när skärmen låses.
+
+Verifierat 2026-09-17 i isolerad lokal Chrome med mobilvy: volymen skalade ljudets faktiska förstärkning, ändringar till 35 och 65 procent synkroniserades mellan inställningar och passvy och sparades i localStorage. Cache v11 installerades och inga JavaScriptundantag eller konsolfel uppstod.
+
 ## Låg prioritet
 
 - [ ] Verifiera att `Exportera historik` laddar ned en giltig JSON-fil med `schemaVersion`, programdata och träningsposter, och komplettera senare med återställning av träningshistorik.

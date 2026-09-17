@@ -13,7 +13,8 @@ const DEFAULT_SETTINGS = {
   squeezeDuration: 5,
   restDuration: 5,
   vibrationEnabled: true,
-  soundEnabled: false
+  soundEnabled: false,
+  soundVolume: 1
 };
 
 const PHASES = {
@@ -140,6 +141,8 @@ const elements = {
   phaseBarFill: document.getElementById("phase-bar-fill"),
   repCounter: document.getElementById("rep-counter"),
   sessionSoundButton: document.getElementById("session-sound-button"),
+  sessionSoundVolume: document.getElementById("session-sound-volume"),
+  sessionVolumeOutput: document.getElementById("session-volume-output"),
   completeSummary: document.getElementById("complete-summary"),
   homeTotalSessions: document.getElementById("home-total-sessions"),
   homeProgramSummary: document.getElementById("home-program-summary"),
@@ -153,6 +156,8 @@ const elements = {
   restDuration: document.getElementById("rest-duration"),
   vibrationEnabled: document.getElementById("vibration-enabled"),
   soundEnabled: document.getElementById("sound-enabled"),
+  settingsSoundVolume: document.getElementById("settings-sound-volume"),
+  settingsVolumeOutput: document.getElementById("settings-volume-output"),
   previewSoundButton: document.getElementById("preview-sound-button")
 };
 
@@ -635,6 +640,7 @@ function fillSettingsForm() {
   elements.restDuration.value = state.settings.restDuration;
   elements.vibrationEnabled.checked = Boolean(state.settings.vibrationEnabled);
   elements.soundEnabled.checked = Boolean(state.settings.soundEnabled);
+  updateSoundVolumeControls();
 }
 
 function triggerVibration(pattern = 120) {
@@ -667,6 +673,7 @@ function playTones(tones, force = false) {
   }
 
   const startTime = context.currentTime + 0.02;
+  const soundVolume = getSoundVolume();
   tones.forEach(({ frequency, offset = 0, duration = 0.12, volume = 0.12 }) => {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
@@ -676,7 +683,7 @@ function playTones(tones, force = false) {
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(frequency, toneStart);
     gain.gain.setValueAtTime(0.0001, toneStart);
-    gain.gain.exponentialRampToValueAtTime(volume, toneStart + 0.015);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume * soundVolume), toneStart + 0.015);
     gain.gain.exponentialRampToValueAtTime(0.0001, toneEnd);
     oscillator.connect(gain);
     gain.connect(context.destination);
@@ -705,6 +712,25 @@ function triggerSound(cue, force = false) {
 
 function triggerSqueezeSound() {
   triggerSound("squeezeTick");
+}
+
+function getSoundVolume() {
+  const volume = Number(state.settings.soundVolume);
+  return Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 1;
+}
+
+function updateSoundVolumeControls() {
+  const percent = Math.round(getSoundVolume() * 100);
+  elements.sessionSoundVolume.value = String(percent);
+  elements.settingsSoundVolume.value = String(percent);
+  elements.sessionVolumeOutput.textContent = `${percent} %`;
+  elements.settingsVolumeOutput.textContent = `${percent} %`;
+}
+
+function setSoundVolume(percent) {
+  state.settings.soundVolume = Math.max(0, Math.min(100, Number(percent) || 0)) / 100;
+  saveSettings();
+  updateSoundVolumeControls();
 }
 
 function updateSessionSoundControl() {
@@ -898,7 +924,8 @@ function createSessionRecord(status, timestamp) {
       prepDuration: state.settings.prepDuration,
       squeezeDuration: state.settings.squeezeDuration,
       restDuration: state.settings.restDuration,
-      soundEnabled: state.settings.soundEnabled
+      soundEnabled: state.settings.soundEnabled,
+      soundVolume: getSoundVolume()
     }
   };
 
@@ -1005,6 +1032,9 @@ elements.sessionSoundButton.addEventListener("click", () => {
     triggerSqueezeSound();
   }
 });
+elements.sessionSoundVolume.addEventListener("input", () => {
+  setSoundVolume(elements.sessionSoundVolume.value);
+});
 elements.navHomeButton.addEventListener("click", () => {
   if (state.session) {
     cancelSession();
@@ -1024,6 +1054,9 @@ elements.openSettingsButton.addEventListener("click", () => {
 });
 elements.closeSettingsButton.addEventListener("click", () => showView("home"));
 elements.previewSoundButton.addEventListener("click", () => triggerSound("squeezeTick", true));
+elements.settingsSoundVolume.addEventListener("input", () => {
+  setSoundVolume(elements.settingsSoundVolume.value);
+});
 
 elements.programLevels.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
@@ -1050,6 +1083,7 @@ elements.settingsForm.addEventListener("submit", (event) => {
   state.settings.restDuration = Math.max(1, Number(elements.restDuration.value) || DEFAULT_SETTINGS.restDuration);
   state.settings.vibrationEnabled = elements.vibrationEnabled.checked;
   state.settings.soundEnabled = elements.soundEnabled.checked;
+  state.settings.soundVolume = Number(elements.settingsSoundVolume.value) / 100;
 
   saveSettings();
   updateHomeSummary();

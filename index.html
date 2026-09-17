@@ -75,9 +75,18 @@
             </div>
           </div>
 
-          <button class="sound-toggle-button" id="session-sound-button" type="button" aria-pressed="false">
-            Ljud av
-          </button>
+          <div class="session-audio-controls">
+            <button class="sound-toggle-button" id="session-sound-button" type="button" aria-pressed="false">
+              Ljud av
+            </button>
+            <label class="volume-control session-volume-control" for="session-sound-volume">
+              <span class="volume-heading">
+                <span>Volym</span>
+                <output id="session-volume-output" for="session-sound-volume">100 %</output>
+              </span>
+              <input id="session-sound-volume" type="range" min="0" max="100" step="5" value="100" />
+            </label>
+          </div>
 
           <div class="session-actions">
             <button class="primary-button" id="pause-button" type="button">Pausa</button>
@@ -144,6 +153,13 @@
             <label class="toggle-row">
               <span>Ljud som stöd</span>
               <input id="sound-enabled" name="soundEnabled" type="checkbox" />
+            </label>
+            <label class="volume-control" for="settings-sound-volume">
+              <span class="volume-heading">
+                <span>Ljudvolym</span>
+                <output id="settings-volume-output" for="settings-sound-volume">100 %</output>
+              </span>
+              <input id="settings-sound-volume" name="soundVolume" type="range" min="0" max="100" step="5" value="100" />
             </label>
             <p class="settings-note">Ett kort ljud varje sekund hjälper dig att hålla knipet. Viloperioderna är tysta.</p>
             <button class="secondary-button" id="preview-sound-button" type="button">Testa ljudet</button>
