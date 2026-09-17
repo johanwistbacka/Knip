@@ -11,7 +11,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "knip-logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "knip-logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

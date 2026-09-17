@@ -9,16 +9,19 @@
     <meta name="apple-mobile-web-app-title" content="Knip" />
     <title>Knip – Beta</title>
     <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="icon" href="knip-logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="knip-logo.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">Din rutin</p>
-          <h1>Knip <span class="beta-badge">Beta</span></h1>
+        <div class="brand-lockup">
+          <img class="brand-logo" src="knip-logo.svg" alt="" width="64" height="64" />
+          <div>
+            <p class="eyebrow">Din rutin</p>
+            <h1>Knip <span class="beta-badge">Beta</span></h1>
+          </div>
         </div>
         <button class="ghost-button" id="nav-home-button" type="button">Hem</button>
       </header>
@@ -26,6 +29,7 @@
       <main>
         <section class="panel view active" id="home-view" aria-labelledby="home-title">
           <p class="lead">Ett kort pass i taget, i din egen takt.</p>
+          <p class="program-status home-program-summary" id="home-program-summary"></p>
           <div class="home-actions">
             <button class="primary-button" id="start-button" type="button">Starta ett pass</button>
             <button class="secondary-button" id="open-program-button" type="button">Se dina steg</button>
@@ -107,6 +111,8 @@
               <p class="stat-value small" id="stats-latest">Inte genomfört ännu</p>
             </article>
           </div>
+          <button class="secondary-button export-button" id="export-history-button" type="button">Exportera historik</button>
+          <p class="history-note">Historiken sparas endast i den här webbläsaren.</p>
         </section>
 
         <section class="panel view" id="settings-view" aria-labelledby="settings-title">
@@ -127,14 +133,16 @@
               <span>Så länge vilar du (sekunder)</span>
               <input id="rest-duration" name="restDuration" type="number" min="1" max="120" required />
             </label>
-            <label>
-              <span>Antal knip i passet</span>
-              <input id="repetitions" name="repetitions" type="number" min="1" max="99" required />
-            </label>
             <label class="toggle-row">
               <span>Vibration som stöd</span>
               <input id="vibration-enabled" name="vibrationEnabled" type="checkbox" />
             </label>
+            <label class="toggle-row">
+              <span>Ljud som stöd</span>
+              <input id="sound-enabled" name="soundEnabled" type="checkbox" />
+            </label>
+            <p class="settings-note">Olika signaler talar om när du ska knipa, vila och byta typ av knip.</p>
+            <button class="secondary-button" id="preview-sound-button" type="button">Testa ljudet</button>
             <button class="primary-button" type="submit">Spara mitt upplägg</button>
           </form>
         </section>

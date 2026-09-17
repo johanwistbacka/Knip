@@ -1,4 +1,4 @@
-const CACHE_NAME = "knip-cache-v4";
+const CACHE_NAME = "knip-cache-v9";
 const APP_FILES = [
   "./",
   "index.html",
@@ -6,7 +6,8 @@ const APP_FILES = [
   "app.js",
   "manifest.json",
   "service-worker.js",
-  "icon.svg"
+  "knip-logo.svg",
+  "knip-logo.png"
 ];
 
 self.addEventListener("install", (event) => {

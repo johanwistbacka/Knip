@@ -27,15 +27,25 @@ Den här listan är vår startpunkt för fortsatt utveckling. Vi börjar med att
 ## Första implementationen
 
 - [x] Gör träningsprogrammen datadrivna.
-- [ ] Bygg programflödet för `Övning 1-6`.
-- [ ] Spara aktiv nivå, nivådagar och genomförda pass.
-- [ ] Implementera den mjuka övergången mellan nivåer.
-- [ ] Lägg till ljud för skärmfri träning.
+- [x] Bygg programflödet för `Övning 1-6`.
+- [x] Spara aktiv nivå, nivådagar och genomförda pass.
+- [x] Implementera den mjuka övergången mellan nivåer.
+- [x] Lägg till ljud för skärmfri träning.
 - [ ] Lägg till val för kortare pass och möjlighet att hoppa över långa pass.
-- [ ] Bygg avslutsskärm med passammanfattning och progression.
+- [x] Bygg avslutsskärm med passammanfattning och progression.
 - [ ] Lägg till snoozbara påminnelser utifrån verifierat plattformsstöd.
 - [ ] Lägg till den valda första nivån av gamification.
 - [ ] Testa hela flödet på mobil och som installerad PWA.
+
+## Åtgärder efter webbläsartest 2026-09-17
+
+- [x] Höj `CACHE_NAME` i `service-worker.js` från `knip-cache-v8` till nästa version så att aktuell `index.html`, `app.js` och övriga statiska filer installeras som en sammanhängande cache.
+- [x] Verifiera uppdateringsflödet på rotadressen utan cachebrytande frågeparameter och kontrollera att inga JavaScriptfel uppstår vid ljudkontrollerna.
+- [ ] Verifiera att `Exportera historik` laddar ned en giltig JSON-fil med `schemaVersion`, programdata och träningsposter.
+- [ ] Testa hörbara ljudsignaler och vibrationsfeedback på en fysisk iPhone.
+- [ ] Testa installation på hemskärmen, start i fristående PWA-läge och offline-start på en fysisk iPhone.
+
+Verifierat 2026-09-17 i isolerad lokal Chrome (headless): vanlig omladdning av `/` installerade v9 över v8 utan frågeparameter eller rensning av cache under uppdateringen. Efter aktivering och ytterligare vanlig omladdning matchade alla åtta cacheposter aktuella projektfiler, v8 var borttagen och localStorage var oförändrad. `Testa ljudet` fungerade med ljudvalet både på och av; ljudvalet sparades, pass var tysta med ljud av och skapade start- och fassignaler med ljud på. Paus, fortsätt, avbryt samt offline-omladdning och ljudtest fungerade utan JavaScriptundantag eller konsolfel. Ljudets hörbarhet och fysisk iPhone/PWA är inte verifierade här.
 
 ## Senare
 
@@ -51,17 +61,19 @@ Den här listan är vår startpunkt för fortsatt utveckling. Vi börjar med att
 - [Utvecklingsidéer](resurser/utvecklingsideer.md)
 - [Övningsprogram 1-6 och progression](resurser/ovningsprogram-1-6-och-progression.md)
 - [Referensanalys och utvecklingsplan](resurser/referensanalys-och-utvecklingsplan.md)
+
 ## Lokal träningsdata och mjuk progression
 
-- [ ] Spara komplett träningshistorik lokalt med versionshanterat dataformat.
-- [ ] Lägg till användarstyrd export av träningshistoriken som JSON.
-- [ ] Räkna progression på tre lokala kalenderdagar i rad, inte tre utspridda träningsdagar.
-- [ ] Visa följden som exempelvis `2 av 3 dagar i rad` och låt användaren själv välja när övergången startar.
-- [ ] Implementera övergången: 1 ny + 2 gamla, 2 nya + 1 gammal, därefter endast den nya övningen.
-- [ ] Låt en missad dag pausa en påbörjad övergång, men återställa kvalificeringsföljden innan övergången.
-- [ ] Testa flera pass samma dag, avbrutna pass, missade dagar och byte av lokal dag/tidszon.
+- [x] Spara komplett träningshistorik lokalt med versionshanterat dataformat.
+- [x] Lägg till användarstyrd export av träningshistoriken som JSON.
+- [x] Räkna progression på tre lokala kalenderdagar i rad, inte tre utspridda träningsdagar.
+- [x] Visa följden som exempelvis `2 av 3 dagar i rad` och låt användaren själv välja när övergången startar.
+- [x] Implementera övergången: 1 ny + 2 gamla, 2 nya + 1 gammal, därefter endast den nya övningen.
+- [x] Låt en missad dag pausa en påbörjad övergång, men återställa kvalificeringsföljden innan övergången.
+- [x] Testa flera pass samma dag, avbrutna pass, missade dagar och byte av lokal dag/tidszon.
 
 Se [specifikationen för lokal träningsdata och progression](resurser/lokal-traningsdata-och-progression.md).
+
 # Hoppa över nivå
 
 - [ ] Lägg till åtgärden `Hoppa över nivå` i programvyn med bekräftelse.

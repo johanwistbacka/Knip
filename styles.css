@@ -61,6 +61,21 @@ button {
   gap: 12px;
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-logo {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(58, 78, 74, 0.16);
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: var(--muted);
@@ -200,6 +215,11 @@ h2 {
   overflow: hidden;
 }
 
+.program-level.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(91, 140, 130, 0.1);
+}
+
 .program-level-summary {
   min-height: 72px;
   cursor: pointer;
@@ -271,6 +291,63 @@ h2 {
   font-weight: 600;
   line-height: 1.45;
   margin: 16px 0 0;
+}
+
+.program-status {
+  margin: 16px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.transition-preview {
+  margin: 18px 0 0;
+  padding: 16px;
+  background: rgba(91, 140, 130, 0.08);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
+.transition-preview h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.transition-block-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding-left: 22px;
+}
+
+.transition-block {
+  padding-left: 4px;
+}
+
+.transition-block-label,
+.transition-block-detail {
+  display: block;
+}
+
+.transition-block-detail {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  margin-top: 3px;
+}
+
+.program-controls {
+  margin-top: 16px;
+}
+
+.export-button {
+  margin-top: 20px;
+}
+
+.history-note {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 button:focus-visible,
@@ -379,6 +456,13 @@ input:focus-visible {
 .toggle-row input[type="checkbox"] {
   width: 24px;
   height: 24px;
+}
+
+.settings-note {
+  margin: -2px 0 2px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .stat-value {
